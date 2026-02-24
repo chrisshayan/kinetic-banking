@@ -1,0 +1,22 @@
+{
+  "name": "nudge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Financial Coach Nudge — Transactional, Pockets, FDP, User Insights",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "kafkajs": "^2.2.4",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

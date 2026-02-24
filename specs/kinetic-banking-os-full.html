@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinetic — Full Banking OS Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:         #07101e;
+  --bg2:        #0a1628;
+  --surface:    #0d1d30;
+  --surface2:   #102238;
+  --border:     #1a3050;
+  --border2:    #1e3a5f;
+  --glow:       rgba(56,189,248,.08);
+
+  --blue:       #38bdf8;
+  --blue-dim:   #0369a1;
+  --cyan:       #22d3ee;
+  --gold:       #fbbf24;
+  --green:      #34d399;
+  --purple:     #a78bfa;
+  --red:        #f87171;
+  --orange:     #fb923c;
+  --teal:       #2dd4bf;
+  --pink:       #f472b6;
+
+  --truth:      #38bdf8;
+  --clo:        #34d399;
+  --coach:      #fbbf24;
+  --isc:        #a78bfa;
+
+  --text:       #d4e4f4;
+  --text2:      #7fa8c8;
+  --text3:      #3d6080;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* grid bg */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(56,189,248,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56,189,248,.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events:none; z-index:0;
+}
+
+.page { position:relative; z-index:1; max-width:1320px; margin:0 auto; padding:48px 32px 80px; }
+
+/* ─── MASTHEAD ─── */
+.masthead {
+  display:grid; grid-template-columns:1fr auto;
+  border-bottom:1px solid var(--border2); padding-bottom:24px; margin-bottom:40px;
+  gap:24px; align-items:end;
+}
+.mk { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.25em; text-transform:uppercase; color:var(--text3); margin-bottom:10px; }
+h1 { font-family:'Playfair Display',serif; font-size:clamp(28px,3.5vw,46px); font-weight:900; line-height:1.05; letter-spacing:-0.5px; }
+h1 em { font-style:italic; color:var(--blue); }
+.msub { margin-top:10px; font-size:13px; color:var(--text2); font-weight:300; line-height:1.7; max-width:580px; }
+.mmeta { font-family:'DM Mono',monospace; font-size:9px; color:var(--text3); text-align:right; line-height:2.2; }
+.mmeta strong { color:var(--text2); font-size:10px; display:block; letter-spacing:.05em; }
+
+/* ─── SECTION LABELS ─── */
+.slabel {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--text3); display:flex; align-items:center; gap:10px;
+  margin-bottom:16px;
+}
+.slabel::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ─── CONNECTOR ─── */
+.connector {
+  text-align:center; padding:8px 0;
+  font-family:'DM Mono',monospace; font-size:9px; color:var(--text3);
+  letter-spacing:.15em; display:flex; align-items:center; justify-content:center; gap:10px;
+}
+.connector-line { flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--border2),transparent); }
+
+/* ═══════════════════════════════════════════
+   LAYER 1 — BANKING OS EXECUTION
+═══════════════════════════════════════════ */
+.bos-block {
+  border:1.5px solid var(--blue); border-radius:10px;
+  background:rgba(56,189,248,.05); overflow:hidden; margin-bottom:12px;
+}
+.bos-header {
+  background:rgba(56,189,248,.1); padding:12px 24px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid rgba(56,189,248,.2);
+}
+.bos-title { font-family:'Playfair Display',serif; font-size:18px; font-weight:700; color:var(--blue); }
+.bos-tag { font-family:'DM Mono',monospace; font-size:9px; color:var(--blue); opacity:.6; letter-spacing:.15em; text-transform:uppercase; }
+.bos-channels { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; }
+.bos-channel {
+  padding:20px 24px; text-align:center; border-right:1px solid rgba(56,189,248,.15);
+  transition:background .15s;
+}
+.bos-channel:last-child { border-right:none; }
+.bos-channel:hover { background:rgba(56,189,248,.07); }
+.bos-ch-icon { font-size:28px; margin-bottom:8px; }
+.bos-ch-name { font-size:13px; font-weight:600; color:var(--blue); margin-bottom:4px; }
+.bos-ch-desc { font-size:11px; color:var(--text2); line-height:1.5; font-weight:300; }
+
+/* ═══════════════════════════════════════════
+   LAYER 2 — SHARED SOURCE CUSTOMER TRUTH
+═══════════════════════════════════════════ */
+.truth-wrapper {
+  display:grid; grid-template-columns:140px 1fr 160px;
+  gap:12px; margin-bottom:12px;
+}
+
+/* left: CLO domains */
+.clo-sidebar {
+  border:1.5px solid rgba(52,211,153,.4); border-radius:10px;
+  background:rgba(52,211,153,.04); padding:16px 12px;
+}
+.sidebar-title { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:.15em; text-transform:uppercase; color:var(--clo); margin-bottom:14px; line-height:1.4; text-align:center; }
+.clo-domains { display:flex; flex-direction:column; gap:8px; }
+.clo-domain {
+  background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.2);
+  border-radius:5px; padding:8px 10px; font-size:11px; font-weight:600;
+  color:var(--clo); display:flex; align-items:center; gap:7px;
+}
+.clo-domain-icon { font-size:14px; }
+
+/* centre: truth engine */
+.truth-main {
+  border:1.5px solid rgba(56,189,248,.4); border-radius:10px;
+  background:rgba(56,189,248,.04); overflow:hidden;
+}
+.truth-header {
+  background:rgba(56,189,248,.1); padding:12px 20px;
+  border-bottom:1px solid rgba(56,189,248,.15);
+  text-align:center;
+}
+.truth-title { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:var(--truth); }
+.truth-subtitle { font-size:10px; color:var(--text3); font-family:'DM Mono',monospace; letter-spacing:.1em; margin-top:2px; }
+.truth-cols { display:grid; grid-template-columns:repeat(5,1fr); gap:0; }
+.truth-col {
+  padding:14px 12px; border-right:1px solid rgba(56,189,248,.1);
+  transition:background .15s;
+}
+.truth-col:last-child { border-right:none; }
+.truth-col:hover { background:rgba(56,189,248,.05); }
+.tc-title { font-size:10px; font-weight:700; color:var(--truth); margin-bottom:10px; letter-spacing:.02em; line-height:1.3; }
+.tc-item { margin-bottom:8px; }
+.tc-item-name { font-size:10px; font-weight:600; color:var(--text); margin-bottom:2px; }
+.tc-item-desc { font-size:9.5px; color:var(--text2); line-height:1.4; font-weight:300; }
+
+/* right: Financial Coach domains */
+.coach-sidebar {
+  border:1.5px solid rgba(251,191,36,.4); border-radius:10px;
+  background:rgba(251,191,36,.04); padding:16px 12px;
+}
+.coach-domains { display:flex; flex-direction:column; gap:7px; }
+.coach-domain {
+  background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.2);
+  border-radius:5px; padding:8px 10px; font-size:10.5px; font-weight:600;
+  color:var(--coach); display:flex; align-items:center; gap:7px;
+}
+
+/* ═══════════════════════════════════════════
+   LAYER 3 — INTELLIGENCE SUPPLY CHAIN
+═══════════════════════════════════════════ */
+.isc-wrapper {
+  display:grid; grid-template-columns:1fr 160px;
+  gap:12px; margin-bottom:12px;
+}
+.isc-main {
+  border:1.5px solid rgba(167,139,250,.4); border-radius:10px;
+  background:rgba(167,139,250,.04); overflow:hidden;
+}
+.isc-header {
+  background:rgba(167,139,250,.1); padding:12px 20px;
+  border-bottom:1px solid rgba(167,139,250,.15);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.isc-title { font-family:'Playfair Display',serif; font-size:17px; font-weight:700; color:var(--isc); }
+.isc-cols { display:grid; grid-template-columns:repeat(5,1fr); gap:0; }
+.isc-col {
+  padding:14px 12px; border-right:1px solid rgba(167,139,250,.1);
+  transition:background .15s;
+}
+.isc-col:last-child { border-right:none; }
+.isc-col:hover { background:rgba(167,139,250,.05); }
+.ic-title { font-size:10px; font-weight:700; color:var(--isc); margin-bottom:10px; letter-spacing:.02em; }
+.ic-item {
+  display:flex; align-items:center; gap:6px; margin-bottom:6px;
+  font-size:10.5px; color:var(--text2); padding:4px 6px;
+  background:rgba(255,255,255,.03); border-radius:3px;
+  border:1px solid rgba(167,139,250,.1);
+}
+.ic-item-icon { font-size:12px; }
+.ic-item-name { font-size:10px; font-weight:500; }
+
+/* BaaS sub-column special */
+.baas-block { display:flex; flex-direction:column; gap:4px; }
+.baas-item {
+  background:rgba(56,189,248,.07); border:1px solid rgba(56,189,248,.15);
+  border-radius:3px; padding:4px 7px; font-size:9.5px; font-weight:500; color:var(--blue);
+  font-family:'DM Mono',monospace;
+}
+.baas-arrow { text-align:center; font-size:10px; color:var(--text3); margin:3px 0; }
+.backbase-lh {
+  background:rgba(56,189,248,.12); border:1.5px solid rgba(56,189,248,.3);
+  border-radius:4px; padding:6px 8px; font-size:10px; font-weight:700; color:var(--blue);
+  text-align:center; margin-top:4px;
+}
+
+/* coach nudge sidebar */
+.nudge-sidebar {
+  border:1.5px solid rgba(251,191,36,.4); border-radius:10px;
+  background:rgba(251,191,36,.04); padding:16px 12px;
+}
+.nudge-items { display:flex; flex-direction:column; gap:7px; margin-top:8px; }
+.nudge-item {
+  background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.2);
+  border-radius:5px; padding:8px 10px; font-size:10px; font-weight:600;
+  color:var(--coach); display:flex; align-items:center; gap:7px;
+}
+
+/* ═══════════════════════════════════════════
+   FEEDBACK LOOP BANNER
+═══════════════════════════════════════════ */
+.feedback-banner {
+  border:1px solid rgba(52,211,153,.3); border-radius:8px;
+  background:rgba(52,211,153,.05); padding:14px 24px;
+  display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.fb-label { font-family:'Playfair Display',serif; font-size:14px; font-weight:700; color:var(--green); white-space:nowrap; }
+.fb-desc { font-size:11.5px; color:var(--text2); font-weight:300; }
+.fb-items { display:flex; flex-wrap:wrap; gap:6px; margin-left:auto; }
+.fb-item {
+  font-family:'DM Mono',monospace; font-size:9px; padding:3px 9px; border-radius:3px;
+  background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.2); color:var(--green);
+  letter-spacing:.06em; text-transform:uppercase;
+}
+
+/* ═══════════════════════════════════════════
+   TOOLS SECTION
+═══════════════════════════════════════════ */
+.tools-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:40px; }
+.tool-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.tool-head { padding:11px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+.tool-head-title { font-family:'Playfair Display',serif; font-size:13px; font-weight:700; }
+.tool-rows { }
+.tr { display:grid; grid-template-columns:1fr 1fr auto; padding:7px 16px; border-bottom:1px solid rgba(255,255,255,.03); gap:8px; align-items:center; font-size:11px; }
+.tr:last-child { border-bottom:none; }
+.tr:hover { background:rgba(255,255,255,.03); }
+.tr-tool { font-weight:600; color:var(--text); }
+.tr-role { color:var(--text2); font-size:10.5px; }
+.tr-tag { font-family:'DM Mono',monospace; font-size:8px; padding:2px 6px; border-radius:2px; letter-spacing:.06em; text-transform:uppercase; font-weight:600; white-space:nowrap; }
+.oss   { background:rgba(52,211,153,.12); color:#34d399; border:1px solid rgba(52,211,153,.25); }
+.cloud { background:rgba(56,189,248,.12); color:#38bdf8; border:1px solid rgba(56,189,248,.25); }
+.saas  { background:rgba(167,139,250,.12); color:#a78bfa; border:1px solid rgba(167,139,250,.25); }
+.native{ background:rgba(251,191,36,.12); color:#fbbf24; border:1px solid rgba(251,191,36,.25); }
+
+/* ─── SHAYAN PRINCIPLES ─── */
+.principles { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:40px; }
+.principle {
+  border-radius:8px; padding:18px; border:1px solid;
+}
+.p-brain  { border-color:rgba(248,113,113,.3); background:rgba(248,113,113,.05); }
+.p-mesh   { border-color:rgba(56,189,248,.3);  background:rgba(56,189,248,.05); }
+.p-glass  { border-color:rgba(251,191,36,.3);  background:rgba(251,191,36,.05); }
+.p-title  { font-family:'Playfair Display',serif; font-size:14px; font-weight:700; margin-bottom:4px; }
+.p-brain .p-title  { color:var(--red); }
+.p-mesh .p-title   { color:var(--blue); }
+.p-glass .p-title  { color:var(--gold); }
+.p-subtitle { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.1em; color:var(--text3); text-transform:uppercase; margin-bottom:10px; }
+.p-desc { font-size:11.5px; color:var(--text2); line-height:1.6; font-weight:300; }
+
+/* ─── KPI SHIFT ─── */
+.kpi-row { display:grid; grid-template-columns:1fr auto 1fr; gap:0; border:1px solid var(--border2); border-radius:8px; overflow:hidden; margin-bottom:40px; }
+.kpi-side { padding:20px 24px; }
+.kpi-old { background:rgba(248,113,113,.05); }
+.kpi-new { background:rgba(167,139,250,.05); }
+.kpi-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.2em; text-transform:uppercase; margin-bottom:12px; }
+.kpi-old .kpi-label { color:var(--red); }
+.kpi-new .kpi-label { color:var(--purple); }
+.kpi-item { font-size:12px; color:var(--text2); padding:5px 0; border-bottom:1px solid rgba(255,255,255,.04); }
+.kpi-item:last-child { border-bottom:none; }
+.kpi-mid { width:1px; background:var(--border2); display:flex; align-items:center; justify-content:center; padding:0 20px; font-size:18px; color:var(--text3); }
+
+/* ─── FOOTER ─── */
+.footer { border-top:1px solid var(--border); padding-top:20px; display:flex; justify-content:space-between; font-family:'DM Mono',monospace; font-size:9px; color:var(--text3); }
+
+/* animations */
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+.bos-block, .truth-wrapper, .isc-wrapper, .feedback-banner {
+  animation:fadeUp .5s ease both;
+}
+.bos-block     { animation-delay:.05s; }
+.truth-wrapper { animation-delay:.15s; }
+.isc-wrapper   { animation-delay:.25s; }
+.feedback-banner { animation-delay:.3s; }
+
+/* note callout */
+.note {
+  border:1px dashed rgba(251,191,36,.3); border-radius:6px;
+  background:rgba(251,191,36,.04); padding:10px 16px;
+  font-size:11px; color:var(--text2); margin-top:8px; margin-bottom:12px;
+  display:flex; gap:8px; align-items:flex-start;
+}
+.note-icon { color:var(--gold); flex-shrink:0; margin-top:1px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div>
+      <div class="mk">Kinetic Retail Banking · Full Banking OS Architecture · v3.0</div>
+      <h1>Kinetic: <em>Banking OS</em><br>Full Vision</h1>
+      <p class="msub">Integrating Chris Shayan's Invisible Banking philosophy with the Banking OS Execution model — including the Shared Source of Customer Truth, CLO & Financial Coach Decision Domains, and the complete Intelligence Supply Chain.</p>
+    </div>
+    <div class="mmeta">
+      <strong>Framework Sources</strong>
+      Chris Shayan · Head of AI, Backbase<br>
+      Banking OS Execution Vision<br>
+      Intelligence Supply Chain<br>
+      <br>
+      <strong>Architecture Layers</strong>
+      Banking OS Execution<br>
+      Shared Customer Truth<br>
+      Intelligence Supply Chain
+    </div>
+  </div>
+
+  <!-- SHAYAN'S 3 PILLARS (compact) -->
+  <div class="slabel">00 — Chris Shayan's Three Governing Pillars</div>
+  <div class="principles" style="margin-bottom:24px;">
+    <div class="principle p-brain">
+      <div class="p-title">🧠 The Idea Machine</div>
+      <div class="p-subtitle">The Brain · Flipped B2C</div>
+      <div class="p-desc">The Intelligence Supply Chain IS the Idea Machine — a factory that generates N-of-1 decisions for each customer. Not a product for 100,000 people. One product for one person.</div>
+    </div>
+    <div class="principle p-mesh">
+      <div class="p-title">🕸️ Data Mesh</div>
+      <div class="p-subtitle">The Nervous System · Real-time</div>
+      <div class="p-desc">The Shared Source of Customer Truth IS the Data Mesh — domain-owned data products feeding a real-time, unified semantic view. The Digital Twin is entirely dependent on it.</div>
+    </div>
+    <div class="principle p-glass">
+      <div class="p-title">🔬 Augmented Intelligence</div>
+      <div class="p-subtitle">The Glass Box · Explainability</div>
+      <div class="p-desc">The Outcome Feedback Loop + Decision History IS Augmented Intelligence — every AI decision stored, auditable, and used to retrain. The bank learns from every interaction.</div>
+    </div>
+  </div>
+
+  <!-- ══════════ LAYER 1: BANKING OS EXECUTION ══════════ -->
+  <div class="slabel">01 — Banking OS Execution · The Customer Interface Layer</div>
+  <div class="bos-block">
+    <div class="bos-header">
+      <div class="bos-title">Banking OS Execution</div>
+      <div class="bos-tag">Interface Layer · All Customer Touchpoints</div>
+    </div>
+    <div class="bos-channels">
+      <div class="bos-channel">
+        <div class="bos-ch-icon">🖥️</div>
+        <div class="bos-ch-name">Digital Behaviour Interfaces</div>
+        <div class="bos-ch-desc">Mobile app, web portal, kiosk — increasingly minimal as the Digital Twin takes over. Eventually: just a guardrail configuration screen.</div>
+      </div>
+      <div class="bos-channel">
+        <div class="bos-ch-icon">🤝</div>
+        <div class="bos-ch-name">Human Assisted Channels</div>
+        <div class="bos-ch-desc">Branch agents and call centre staff — served the same Shared Customer Truth as the AI. A frontline agent sees exactly what the AI model sees. No context gap.</div>
+      </div>
+      <div class="bos-channel">
+        <div class="bos-ch-icon">💬</div>
+        <div class="bos-ch-name">Conversational</div>
+        <div class="bos-ch-desc">LLM-powered chat — the primary interface of the Invisible Bank. Natural language interaction with the Financial Digital Twin and Financial Coach.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div>↓ Intent, behaviour, and events flow downstream ↓<div class="connector-line"></div></div>
+
+  <!-- ══════════ LAYER 2: SHARED SOURCE CUSTOMER TRUTH ══════════ -->
+  <div class="slabel">02 — Shared Source of Customer Truth · The Central Nervous System</div>
+  <div class="truth-wrapper">
+
+    <!-- LEFT: CLO DOMAINS -->
+    <div class="clo-sidebar">
+      <div class="sidebar-title">CLO Decision Domains</div>
+      <div class="clo-domains">
+        <div class="clo-domain"><div class="clo-domain-icon">🎯</div>Acquisition Domain</div>
+        <div class="clo-domain"><div class="clo-domain-icon">⚡</div>Activation Domain</div>
+        <div class="clo-domain"><div class="clo-domain-icon">📈</div>Expansion Domain</div>
+        <div class="clo-domain"><div class="clo-domain-icon">🔒</div>Retention Domain</div>
+      </div>
+      <div style="margin-top:14px;padding:10px;background:rgba(52,211,153,.08);border-radius:5px;border:1px solid rgba(52,211,153,.15);">
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--clo);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">CLO Role</div>
+        <div style="font-size:10px;color:var(--text2);line-height:1.5;font-weight:300;">Orchestrates all customer journeys by consuming Data Products and triggering Next-Best-Actions across each lifecycle domain.</div>
+      </div>
+    </div>
+
+    <!-- CENTRE: 5-COLUMN TRUTH ENGINE -->
+    <div class="truth-main">
+      <div class="truth-header">
+        <div class="truth-title">Shared Source of Customer Truth</div>
+        <div class="truth-subtitle">The single source every channel, every AI, every agent reads from — human and machine see the same truth</div>
+      </div>
+      <div class="truth-cols">
+
+        <!-- Col 1 -->
+        <div class="truth-col">
+          <div class="tc-title">Unified Customer State Model</div>
+          <div class="tc-item">
+            <div class="tc-item-name">Life-stage Tracking</div>
+            <div class="tc-item-desc">Tracks where the customer is in their relationship with the bank (e.g., New-to-Bank, Active, High-Churn Risk).</div>
+          </div>
+          <div class="tc-item">
+            <div class="tc-item-name">Behavioral Snapshots</div>
+            <div class="tc-item-desc">Captures current activity patterns across all touchpoints — digital logs to human interactions.</div>
+          </div>
+          <div class="tc-item">
+            <div class="tc-item-name">Historical Context</div>
+            <div class="tc-item-desc">Integrates historical insights to ensure the current state is grounded in the customer's long-term behavior.</div>
+          </div>
+        </div>
+
+        <!-- Col 2 -->
+        <div class="truth-col">
+          <div class="tc-title">Behavioral & Contextual Signal Engine</div>
+          <div class="tc-item">
+            <div class="tc-item-name">Intent Recognition</div>
+            <div class="tc-item-desc">Identifies what the customer is trying to achieve (e.g., "Buying a home" or "Consolidating debt").</div>
+          </div>
+          <div class="tc-item">
+            <div class="tc-item-name">Sentiment & Friction Signals</div>
+            <div class="tc-item-desc">Detects frustration — multiple failed logins, declined transactions — for immediate intervention.</div>
+          </div>
+          <div class="tc-item">
+            <div class="tc-item-name">Regional Nuance</div>
+            <div class="tc-item-desc">Adjusts signals for US, Europe, Asia — regional behaviors and norms built into the Intelligence Supply Chain.</div>
+          </div>
+        </div>
+
+        <!-- Col 3 -->
+        <div class="truth-col">
+          <div class="tc-title">Semantic Layer</div>
+          <div class="tc-item">
+            <div class="tc-item-name">Common Language</div>
+            <div class="tc-item-desc">Converts fragmented data from Databricks, OpenSearch, event streams into a unified semantic format that every system speaks.</div>
+          </div>
+          <div class="tc-item">
+            <div class="tc-item-name">Entity Resolution</div>
+            <div class="tc-item-desc">Uses CDP-like patterns to identify the customer and provide the "truth" of that identity across the entire Banking OS.</div>
+          </div>
+        </div>
+
+        <!-- Col 4 -->
+        <div class="truth-col">
+          <div class="tc-title">Real-Time Event Listener</div>
+          <div class="tc-item">
+            <div class="tc-item-name">Continuous Truth</div>
+            <div class="tc-item-desc">Consumes "Meaningful Events" as they happen. The CLO layer never makes decisions based on stale information.</div>
+          </div>
+          <div class="tc-item">
+            <div class="tc-item-name">Frontline Support</div>
+            <div class="tc-item-desc">Serves all frontline systems. A human agent in a branch sees the same "truth" as an AI agent in the mobile app.</div>
+          </div>
+          <div class="tc-item">
+            <div class="tc-item-name">Truth Updates</div>
+            <div class="tc-item-desc">Immediately updates customer state based on outcomes, ensuring the bank learns from every interaction.</div>
+          </div>
+        </div>
+
+        <!-- Col 5 -->
+        <div class="truth-col">
+          <div class="tc-title">Outcome Feedback Loop</div>
+          <div class="tc-item">
+            <div class="tc-item-name">Decision History</div>
+            <div class="tc-item-desc">Stores outcomes of prior decisions orchestrated by CLO — e.g., "Did the customer accept the wellness nudge?" This is Augmented Intelligence in practice.</div>
+          </div>
+          <div class="tc-item">
+            <div class="tc-item-name">Truth Updates</div>
+            <div class="tc-item-desc">Feeds outcomes back to retrain models and recalibrate the customer state model continuously.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: FINANCIAL COACH DOMAINS -->
+    <div class="coach-sidebar">
+      <div class="sidebar-title" style="color:var(--coach);">Financial Coach Decision Domains</div>
+      <div class="coach-domains">
+        <div class="coach-domain"><span>🏥</span>Health Assessment</div>
+        <div class="coach-domain"><span>📊</span>Income/Expense Anomaly Detection</div>
+        <div class="coach-domain"><span>🏆</span>Peer Benchmarking</div>
+        <div class="coach-domain"><span>⚠️</span>Early Warnings</div>
+        <div class="coach-domain"><span>📅</span>Weekly Reflections</div>
+      </div>
+      <div style="margin-top:14px;padding:10px;background:rgba(251,191,36,.08);border-radius:5px;border:1px solid rgba(251,191,36,.15);">
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--coach);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">Coach Role</div>
+        <div style="font-size:10px;color:var(--text2);line-height:1.5;font-weight:300;">Proactively coaches customers on financial health. Reads from the same Customer Truth but acts as an empathetic AI advisor, not a product engine.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="connector"><div class="connector-line"></div>↓ Semantic data products & events consumed by Intelligence Supply Chain ↓<div class="connector-line"></div></div>
+
+  <!-- ══════════ LAYER 3: INTELLIGENCE SUPPLY CHAIN ══════════ -->
+  <div class="slabel">03 — The Intelligence Supply Chain · The Idea Machine Engine</div>
+  <div class="note">
+    <span class="note-icon">⚠</span>
+    <span>The diagram flags a <strong>Potentially Duplicate Effort</strong> between the Shared Customer Truth Semantic Layer and the ISC Ontology. These must be carefully delineated: the Semantic Layer produces unified customer identity data; the Ontology maps domain actions and business concepts. Both are necessary but must not duplicate transformation logic.</span>
+  </div>
+  <div class="isc-wrapper">
+
+    <!-- MAIN ISC COLUMNS -->
+    <div class="isc-main">
+      <div class="isc-header">
+        <div class="isc-title">The Intelligence Supply Chain</div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--isc);opacity:.6;letter-spacing:.12em;text-transform:uppercase;">The Idea Machine · Data → Ontology → ML → GenAI Decisions</div>
+      </div>
+      <div class="isc-cols">
+
+        <!-- Col 1: Customer on BaaS -->
+        <div class="isc-col">
+          <div class="ic-title">Customer on BaaS</div>
+          <div class="baas-block">
+            <div class="baas-item">📦 EBP</div>
+            <div class="baas-item">🏦 Source FS</div>
+            <div class="baas-item">📱 Source App</div>
+            <div class="baas-item">🗄️ Data Lake</div>
+          </div>
+          <div class="baas-arrow">↓</div>
+          <div class="backbase-lh">🏗️ Backbase Lakehouse</div>
+          <div style="font-size:9.5px;color:var(--text2);margin-top:8px;line-height:1.5;font-weight:300;">All source data ingested into the Backbase Lakehouse — the raw foundation for all AI operations.</div>
+        </div>
+
+        <!-- Col 2: Regional Data Integration -->
+        <div class="isc-col">
+          <div class="ic-title">Regional Data Integration</div>
+          <div class="ic-item"><div class="ic-item-icon">⚙️</div><div class="ic-item-name">HyperAuto Automation</div></div>
+          <div class="ic-item"><div class="ic-item-icon">📊</div><div class="ic-item-name">Data Pipelines</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🔧</div><div class="ic-item-name">Pipeline Builder</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🩺</div><div class="ic-item-name">Data Health Monitor</div></div>
+          <div class="ic-item"><div class="ic-item-icon">📈</div><div class="ic-item-name">Backbase TimeSeries SDK</div></div>
+          <div style="font-size:9.5px;color:var(--text2);margin-top:8px;line-height:1.5;font-weight:300;">Regional nuance is applied here — US, Europe, Asia behavioral norms adjusted before feeding the ontology.</div>
+        </div>
+
+        <!-- Col 3: Ontology -->
+        <div class="isc-col">
+          <div class="ic-title">Ontology</div>
+          <div class="ic-item"><div class="ic-item-icon">⚡</div><div class="ic-item-name">Action</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🔗</div><div class="ic-item-name">Ontology Engine</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🗂️</div><div class="ic-item-name">Semantic Data Layer</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🧩</div><div class="ic-item-name">Semantic Mapping</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🎼</div><div class="ic-item-name">Intelligent Orchestration</div></div>
+          <div style="font-size:9.5px;color:var(--text2);margin-top:8px;line-height:1.5;font-weight:300;">The knowledge graph — mapping actions, entities, and domain concepts so that ML models understand what business events actually mean.</div>
+        </div>
+
+        <!-- Col 4: ML & SLM Repo -->
+        <div class="isc-col">
+          <div class="ic-title">ML & SLM Repo</div>
+          <div class="ic-item"><div class="ic-item-icon">📐</div><div class="ic-item-name">Modeling Suite</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🔄</div><div class="ic-item-name">Process Modeling</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🚀</div><div class="ic-item-name">Model Deployment</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🎯</div><div class="ic-item-name">Fine-Tuning (SLM)</div></div>
+          <div style="font-size:9.5px;color:var(--text2);margin-top:8px;line-height:1.5;font-weight:300;">Small Language Models fine-tuned on banking domain data. Credit scoring, fraud detection, churn prediction — all versioned and deployed here.</div>
+        </div>
+
+        <!-- Col 5: Decisions Suite GenAI -->
+        <div class="isc-col">
+          <div class="ic-title">Decisions Suite GenAI</div>
+          <div class="ic-item"><div class="ic-item-icon">📝</div><div class="ic-item-name">Writeback</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🔁</div><div class="ic-item-name">Decision Loop</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🧪</div><div class="ic-item-name">Decision Simulation</div></div>
+          <div class="ic-item"><div class="ic-item-icon">📸</div><div class="ic-item-name">Decision Capture</div></div>
+          <div class="ic-item"><div class="ic-item-icon">🎬</div><div class="ic-item-name">Scenario Planning</div></div>
+          <div style="font-size:9.5px;color:var(--text2);margin-top:8px;line-height:1.5;font-weight:300;">GenAI executes, simulates, and captures decisions. Writeback closes the loop — every outcome feeds the Outcome Feedback Loop upstream.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Financial Coach Nudge Sidebar -->
+    <div class="nudge-sidebar">
+      <div class="sidebar-title" style="color:var(--coach);">Financial Coach Nudge</div>
+      <div class="nudge-items">
+        <div class="nudge-item"><span>💳</span>Transactional Data</div>
+        <div class="nudge-item"><span>🪙</span>Pockets & Budgets</div>
+        <div class="nudge-item"><span>📋</span>Financial Development Plan</div>
+        <div class="nudge-item"><span>💡</span>User Financial Insights</div>
+      </div>
+      <div style="margin-top:14px;padding:10px;background:rgba(251,191,36,.08);border-radius:5px;border:1px solid rgba(251,191,36,.15);">
+        <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--coach);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;">Nudge Role</div>
+        <div style="font-size:10px;color:var(--text2);line-height:1.5;font-weight:300;">Outputs from the Intelligence Supply Chain converted into actionable financial coaching moments delivered at the right time, in the right channel.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FEEDBACK LOOP BANNER -->
+  <div class="feedback-banner">
+    <div class="fb-label">♻️ Outcome Feedback Loop</div>
+    <div class="fb-desc">Decisions from the GenAI Suite are written back via Writeback → captured in Decision History → immediately update the Unified Customer State Model → retrain ML models in the SLM Repo. The system learns from every interaction across the customer's entire lifetime.</div>
+    <div class="fb-items">
+      <span class="fb-item">Decision History</span>
+      <span class="fb-item">Writeback</span>
+      <span class="fb-item">Model Retraining</span>
+      <span class="fb-item">State Update</span>
+      <span class="fb-item">Continuous Truth</span>
+    </div>
+  </div>
+
+  <!-- ══════════ TOOLS TABLE ══════════ -->
+  <div class="slabel" style="margin-top:40px;">04 — Kinetic Tools Mapped to Each Layer</div>
+  <div class="tools-grid">
+
+    <div class="tool-card">
+      <div class="tool-head" style="background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.2);">
+        <span>🖥️</span><span class="tool-head-title" style="color:var(--blue);">Banking OS Execution</span>
+      </div>
+      <div class="tool-rows">
+        <div class="tr"><span class="tr-tool">React Native</span><span class="tr-role">Digital behaviour interfaces (mobile)</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">Next.js 14</span><span class="tr-role">Web portal (SSR/ISR)</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">LangChain / LLM</span><span class="tr-role">Conversational interface layer</span><span class="tr-tag saas">SaaS</span></div>
+        <div class="tr"><span class="tr-tool">Backbase DXP</span><span class="tr-role">Digital experience platform</span><span class="tr-tag native">Native</span></div>
+        <div class="tr"><span class="tr-tool">Twilio / WhatsApp</span><span class="tr-role">Conversational channel delivery</span><span class="tr-tag saas">SaaS</span></div>
+        <div class="tr"><span class="tr-tool">Zendesk / Genesys</span><span class="tr-role">Human assisted channel (agents)</span><span class="tr-tag saas">SaaS</span></div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-head" style="background:rgba(56,189,248,.07);border-color:rgba(56,189,248,.2);">
+        <span>🕸️</span><span class="tool-head-title" style="color:var(--truth);">Shared Source of Customer Truth</span>
+      </div>
+      <div class="tool-rows">
+        <div class="tr"><span class="tr-tool">Backbase CLO</span><span class="tr-role">Customer Lifetime Orchestrator</span><span class="tr-tag native">Native</span></div>
+        <div class="tr"><span class="tr-tool">Apache Kafka</span><span class="tr-role">Real-time event listener / streaming</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">Databricks</span><span class="tr-role">Semantic layer data transformation</span><span class="tr-tag cloud">Cloud</span></div>
+        <div class="tr"><span class="tr-tool">OpenSearch</span><span class="tr-role">Entity resolution & semantic search</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">Segment / CDP</span><span class="tr-role">Unified customer profile & identity</span><span class="tr-tag saas">SaaS</span></div>
+        <div class="tr"><span class="tr-tool">Apache Flink</span><span class="tr-role">Real-time behavioral signal processing</span><span class="tr-tag oss">OSS</span></div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-head" style="background:rgba(52,211,153,.07);border-color:rgba(52,211,153,.2);">
+        <span>🎼</span><span class="tool-head-title" style="color:var(--clo);">CLO & Financial Coach</span>
+      </div>
+      <div class="tool-rows">
+        <div class="tr"><span class="tr-tool">Backbase CLO</span><span class="tr-role">Journey orchestration across domains</span><span class="tr-tag native">Native</span></div>
+        <div class="tr"><span class="tr-tool">LangGraph</span><span class="tr-role">Agentic AI state machine for coach</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">Braze</span><span class="tr-role">Personalized coach nudge delivery</span><span class="tr-tag saas">SaaS</span></div>
+        <div class="tr"><span class="tr-tool">Amplitude</span><span class="tr-role">Behavioral analytics & friction signals</span><span class="tr-tag saas">SaaS</span></div>
+        <div class="tr"><span class="tr-tool">Metabase</span><span class="tr-role">Peer benchmarking dashboards</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">Pendo</span><span class="tr-role">In-app weekly reflection nudges</span><span class="tr-tag saas">SaaS</span></div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-head" style="background:rgba(167,139,250,.07);border-color:rgba(167,139,250,.2);">
+        <span>🗄️</span><span class="tool-head-title" style="color:var(--isc);">Customer on BaaS + Data Integration</span>
+      </div>
+      <div class="tool-rows">
+        <div class="tr"><span class="tr-tool">Backbase Lakehouse</span><span class="tr-role">Unified data lake for all source systems</span><span class="tr-tag native">Native</span></div>
+        <div class="tr"><span class="tr-tool">Backbase TimeSeries SDK</span><span class="tr-role">Time-series financial data ingestion</span><span class="tr-tag native">Native</span></div>
+        <div class="tr"><span class="tr-tool">HyperAuto</span><span class="tr-role">Automated data pipeline orchestration</span><span class="tr-tag saas">SaaS</span></div>
+        <div class="tr"><span class="tr-tool">dbt</span><span class="tr-role">Data transformation & health checks</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">DataHub</span><span class="tr-role">Data product catalogue & lineage</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">Delta Lake</span><span class="tr-role">ACID data lake on object storage</span><span class="tr-tag oss">OSS</span></div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-head" style="background:rgba(167,139,248,.07);border-color:rgba(167,139,250,.2);">
+        <span>🧠</span><span class="tool-head-title" style="color:var(--isc);">Ontology + ML & SLM Repo</span>
+      </div>
+      <div class="tool-rows">
+        <div class="tr"><span class="tr-tool">Neo4j</span><span class="tr-role">Knowledge graph / ontology engine</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">Protégé / OWL</span><span class="tr-role">Semantic ontology modelling</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">SageMaker</span><span class="tr-role">Model training & SLM fine-tuning</span><span class="tr-tag cloud">Cloud</span></div>
+        <div class="tr"><span class="tr-tool">MLflow</span><span class="tr-role">Model registry & experiment tracking</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">Feast</span><span class="tr-role">Feature store for all ML models</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">XGBoost / PyTorch</span><span class="tr-role">Credit scoring, fraud, churn models</span><span class="tr-tag oss">OSS</span></div>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-head" style="background:rgba(167,139,250,.07);border-color:rgba(167,139,250,.2);">
+        <span>⚡</span><span class="tool-head-title" style="color:var(--isc);">Decisions Suite GenAI</span>
+      </div>
+      <div class="tool-rows">
+        <div class="tr"><span class="tr-tool">Claude API / GPT-4</span><span class="tr-role">GenAI reasoning for decisions</span><span class="tr-tag saas">SaaS</span></div>
+        <div class="tr"><span class="tr-tool">LangChain / LangGraph</span><span class="tr-role">Decision loop & agentic orchestration</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">SHAP / LIME</span><span class="tr-role">Explainability for all AI decisions</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">OPA</span><span class="tr-role">Guardrail policies & authorization</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">Kafka + Writeback</span><span class="tr-role">Decision capture & feedback loop</span><span class="tr-tag oss">OSS</span></div>
+        <div class="tr"><span class="tr-tool">Evidently AI</span><span class="tr-role">Model monitoring & drift detection</span><span class="tr-tag oss">OSS</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- KPI SHIFT -->
+  <div class="slabel">05 — The KPI Shift This Architecture Forces</div>
+  <div class="kpi-row">
+    <div class="kpi-side kpi-old">
+      <div class="kpi-label">❌ Old World — Reactive Banking KPIs</div>
+      <div class="kpi-item">📲 Monthly Active Users (MAU) — rewarding app dependency</div>
+      <div class="kpi-item">⏱️ Session duration & login frequency</div>
+      <div class="kpi-item">📊 Feature engagement rate</div>
+      <div class="kpi-item">🔔 Push notification open rate</div>
+      <div class="kpi-item">🏪 Cross-sell volume by product segment</div>
+      <div class="kpi-item">📉 Churn rate (reactive, detected too late)</div>
+    </div>
+    <div class="kpi-mid">→</div>
+    <div class="kpi-side kpi-new">
+      <div class="kpi-label">✦ New World — Invisible Bank KPIs (Kinetic)</div>
+      <div class="kpi-item">🤝 Autonomous agreements completed by Digital Twin</div>
+      <div class="kpi-item">🎯 Customer financial goals achieved on time</div>
+      <div class="kpi-item">😴 Days of financial admin eliminated per customer</div>
+      <div class="kpi-item">💰 Net worth improvement per customer per year</div>
+      <div class="kpi-item">🛡️ Guardrail trust score (customer comfort with Twin)</div>
+      <div class="kpi-item">🔁 Outcome Feedback Loop accuracy (did the decision work?)</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>Kinetic Retail Banking · Banking OS Architecture v3.0</div>
+    <div>Chris Shayan (Backbase AI) · Banking OS Execution · Intelligence Supply Chain</div>
+    <div>Confidential — Internal Use Only</div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "kinetic-banking",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kinetic Banking OS Showcase — Banking OS Full Vision",
+  "scripts": {
+    "dev": "pnpm run -r dev --parallel",
+    "build": "pnpm run -r build",
+    "mifos-mock": "pnpm --filter mifos-mock dev",
+    "showcase": "pnpm --dir apps/showcase dev",
+    "customer-truth": "pnpm --filter customer-truth dev",
+    "clo": "pnpm --filter clo dev",
+    "coach": "pnpm --filter coach dev",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.0.6"
+}

@@ -1,0 +1,10 @@
+# Feast feature store for Kinetic ISC
+# ML features for health score, anomaly, churn
+
+project: kinetic
+registry: data/registry.db
+provider: local
+online_store:
+  type: sqlite
+  path: data/online_store.db
+entity_key_serialization_version: 2

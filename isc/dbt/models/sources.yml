@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: mifos
+    description: Mifos-like mock data (Kafka → staging tables)
+    tables:
+      - name: clients
+      - name: accounts
+      - name: transactions
