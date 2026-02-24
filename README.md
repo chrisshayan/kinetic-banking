@@ -73,6 +73,15 @@ See [docs/PHASE-2-SETUP.md](docs/PHASE-2-SETUP.md) for details.
 - **CLO:** http://localhost:3000/api/clo/health | POST http://localhost:3000/api/clo/nba
 - **Coach:** http://localhost:3000/api/coach/health | POST http://localhost:3000/api/coach/chat | POST http://localhost:3000/api/coach/nudge
 
+### 5. Phase 5 — Intelligence Supply Chain
+
+```bash
+docker compose up -d   # includes OPA, Neo4j, MLflow
+pnpm isc:seed-ontology # load Neo4j ontology
+```
+
+See [isc/README.md](isc/README.md) for dbt, Feast, MLflow setup. CLO decisions are guarded by OPA (block if account closed or confidence < 0.7).
+
 ## Environment
 
 Copy `.env.example` to `.env` and configure:

@@ -1,9 +1,16 @@
 version: 2
 
+# PostgreSQL — Customer Truth (Kafka consumer writes here)
 sources:
-  - name: mifos
-    description: Mifos-like mock data (Kafka → staging tables)
+  - name: kinetic
+    description: Shared Source of Customer Truth (PostgreSQL)
+    schema: public
     tables:
-      - name: clients
+      - name: customers
+        description: Customers synced from Mifos + RudderStack
       - name: accounts
+        description: Accounts (checking, savings, term deposit, credit card)
       - name: transactions
+        description: Transaction history
+      - name: decision_history
+        description: CLO + Coach decision outcomes

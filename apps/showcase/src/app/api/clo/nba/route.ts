@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runCLO } from '@/lib/agents/clo-agent';
 import { getCustomerById, getAccountsByCustomerId, getDecisionHistory, insertDecision } from '@/lib/db';
+import { checkGuardrails } from '@/lib/opa';
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
@@ -43,6 +44,20 @@ export async function POST(request: NextRequest) {
     };
 
     const nba = runCLO(customerId, truth);
+
+    const accountStatus = accounts.some((a) => a.status === 'ACTIVE') ? 'ACTIVE' : accounts[0]?.status ?? 'UNKNOWN';
+    const guard = await checkGuardrails({
+      account_status: accountStatus,
+      confidence: nba.confidence,
+      domain: nba.domain,
+      action: nba.action,
+    });
+    if (!guard.allowed) {
+      return NextResponse.json(
+        { error: 'Guardrail denied', reason: guard.reason, nba },
+        { status: 403 }
+      );
+    }
 
     await insertDecision(customerId, nba.domain, nba.action, {
       confidence: nba.confidence,

@@ -1,10 +1,11 @@
--- Staging: customers from Mifos mock (will be replaced by Kafka ingestion)
+-- Staging: customers from Customer Truth
 {{ config(materialized='view') }}
 
 select
-  id,
+  id as customer_id,
   display_name,
-  status as life_stage,
+  status,
+  life_stage,
   created_at,
   updated_at
-from {{ source('mifos', 'clients') }}
+from {{ source('kinetic', 'customers') }}

@@ -16,7 +16,9 @@
     "coach": "pnpm --filter coach dev",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "db:seed-sarah": "tsx scripts/seed-sarah-story.ts"
+    "db:seed-sarah": "tsx scripts/seed-sarah-story.ts",
+    "isc:dbt": "cd isc/dbt && dbt run",
+    "isc:seed-ontology": "docker exec -i $(docker ps -qf ancestor=neo4j:5-community | head -1) cypher-shell -u neo4j -p kinetic123 < isc/ontology/seed.cypher"
   },
   "engines": {
     "node": ">=20"

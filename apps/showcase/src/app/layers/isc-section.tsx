@@ -5,8 +5,11 @@ export function ISCSection() {
     { name: 'Mifos Mock', url: 'http://localhost:3001', desc: 'Core banking (clients, accounts, txns)' },
     { name: 'Kafka', url: null, desc: 'mifos.clients, mifos.accounts, mifos.transactions' },
     { name: 'Kafka Consumer', url: null, desc: '→ PostgreSQL + OpenSearch' },
-    { name: 'dbt / Feast / Neo4j', url: null, desc: 'Semantic layer, features, ontology (Phase 5)' },
-    { name: 'MLflow', url: 'http://localhost:5001', desc: 'Model registry' },
+    { name: 'dbt', url: null, desc: 'Semantic layer (stg_*, fct_customer_health)' },
+    { name: 'Feast', url: null, desc: 'Feature store (customer_health)' },
+    { name: 'Neo4j', url: 'http://localhost:7474', desc: 'Ontology (actions, entities, concepts)' },
+    { name: 'MLflow', url: 'http://localhost:5001', desc: 'Model registry (health score)' },
+    { name: 'OPA', url: 'http://localhost:8181', desc: 'Guardrails (CLO decisions)' },
   ];
 
   return (
