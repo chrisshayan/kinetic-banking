@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runCoachNudge } from '@/lib/agents/coach-agent';
 import { getCustomerById, getAccountsByCustomerId } from '@/lib/db';
+import { logCoachNudge } from '@/lib/mlflow';
 
 const COACH_DOMAINS = [
   'health_assessment',
@@ -42,6 +43,13 @@ export async function POST(request: NextRequest) {
     };
 
     const result = runCoachNudge(customerId, domain, truth);
+
+    logCoachNudge({
+      customerId,
+      domain,
+      type: result.type,
+    }).catch(() => {});
+
     return NextResponse.json(result);
   } catch (err) {
     console.error('[coach/nudge]', err);

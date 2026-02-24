@@ -27,6 +27,7 @@ export default function Home() {
             <li><a href="/api/customer-truth/search?q=alice" className="text-cyan-400 hover:underline">/api/customer-truth/search?q=alice</a></li>
             <li><a href="/api/clo/health" className="text-cyan-400 hover:underline">/api/clo/health</a></li>
             <li><a href="/api/coach/health" className="text-cyan-400 hover:underline">/api/coach/health</a></li>
+            <li><a href="http://localhost:5001" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">MLflow (kinetic-decisions)</a></li>
             <li><a href="/api/cdp/health" className="text-cyan-400 hover:underline">/api/cdp/health</a></li>
           </ul>
           <p className="font-medium text-slate-300 mt-4 mb-2">CDP (RudderStack) — POST</p>

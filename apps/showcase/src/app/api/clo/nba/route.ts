@@ -3,6 +3,7 @@ import { runCLO } from '@/lib/agents/clo-agent';
 import { getCustomerById, getAccountsByCustomerId, getDecisionHistory } from '@/lib/db';
 import { checkGuardrails } from '@/lib/opa';
 import { publishDecisionOutcome } from '@/lib/kafka';
+import { logCLODecision } from '@/lib/mlflow';
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
@@ -74,6 +75,14 @@ export async function POST(request: NextRequest) {
         reasoning: nba.reasoning,
       });
     }
+
+    logCLODecision({
+      customerId,
+      domain: nba.domain,
+      action: nba.action,
+      confidence: nba.confidence,
+      ontologyDriven: nba.ontologyDriven,
+    }).catch(() => {});
 
     return NextResponse.json(nba);
   } catch (err) {

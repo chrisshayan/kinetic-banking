@@ -88,7 +88,7 @@ See [isc/README.md](isc/README.md) for dbt, Feast, MLflow setup. CLO decisions a
 pnpm writeback   # Consumes decisions.outcomes → Decision History
 ```
 
-CLO NBA publishes to Kafka; writeback persists to PostgreSQL and triggers MLflow feedback runs.
+CLO NBA publishes to Kafka; writeback persists to PostgreSQL and triggers MLflow feedback runs. CLO/Coach decisions are logged to MLflow experiment `kinetic-decisions` (http://localhost:5001).
 
 ### 7. Run Demo (End-to-end)
 

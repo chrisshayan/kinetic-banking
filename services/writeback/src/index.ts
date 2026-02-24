@@ -74,30 +74,59 @@ async function handleDecisionOutcome(message: string) {
 
 async function triggerRetrainingFlag(customerId: string, domain: string, action: string) {
   try {
-    const res = await fetch(`${MLFLOW_TRACKING_URI}/api/2.0/mlflow/experiments/search`, {
+    const searchRes = await fetch(`${MLFLOW_TRACKING_URI}/api/2.0/mlflow/experiments/search`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ view_type: 'ACTIVE_ONLY' }),
+      body: JSON.stringify({ view_type: 'ALL', max_results: 100 }),
     });
-    if (!res.ok) return;
-    const data = await res.json();
-    const exp = data.experiments?.find((e: { name: string }) => e.name === 'kinetic-health-score');
-    if (exp) {
-      await fetch(`${MLFLOW_TRACKING_URI}/api/2.0/mlflow/runs/create`, {
+    if (!searchRes.ok) return;
+    const data = await searchRes.json();
+    let exp = data.experiments?.find((e: { name: string }) => e.name === 'kinetic-decisions');
+    if (!exp) {
+      const createRes = await fetch(`${MLFLOW_TRACKING_URI}/api/2.0/mlflow/experiments/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          experiment_id: exp.experiment_id,
-          run_name: `feedback-${Date.now()}`,
-          tags: [
-            { key: 'source', value: 'writeback' },
-            { key: 'customer_id', value: customerId },
-            { key: 'domain', value: domain },
-            { key: 'action', value: action },
-          ],
-        }),
+        body: JSON.stringify({ name: 'kinetic-decisions' }),
       });
+      if (!createRes.ok) return;
+      const createData = await createRes.json();
+      exp = { experiment_id: createData.experiment_id };
     }
+    const createRunRes = await fetch(`${MLFLOW_TRACKING_URI}/api/2.0/mlflow/runs/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        experiment_id: exp.experiment_id,
+        run_name: `writeback-${customerId}-${domain}-${action}`,
+        start_time: Date.now(),
+        tags: [
+          { key: 'source', value: 'writeback' },
+          { key: 'customer_id', value: customerId },
+          { key: 'domain', value: domain },
+          { key: 'action', value: action },
+        ],
+      }),
+    });
+    if (!createRunRes.ok) return;
+    const { run } = await createRunRes.json();
+    await fetch(`${MLFLOW_TRACKING_URI}/api/2.0/mlflow/runs/log-batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        run_id: run.info.run_id,
+        params: [
+          { key: 'customer_id', value: customerId },
+          { key: 'domain', value: domain },
+          { key: 'action', value: action },
+        ],
+        metrics: [{ key: 'decision_count', value: 1, timestamp: Date.now() }],
+      }),
+    });
+    await fetch(`${MLFLOW_TRACKING_URI}/api/2.0/mlflow/runs/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ run_id: run.info.run_id, status: 'FINISHED', end_time: Date.now() }),
+    });
   } catch {
     // MLflow unreachable — non-fatal
   }
