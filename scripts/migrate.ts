@@ -1,17 +1,23 @@
 /**
  * Run PostgreSQL migrations via Node (no psql required)
  */
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { Pool } from 'pg';
 
 const DATABASE_URL = process.env.DATABASE_URL ?? 'postgresql://kinetic:kinetic@localhost:5432/kinetic';
 const pool = new Pool({ connectionString: DATABASE_URL });
 
-const sql = readFileSync(resolve(process.cwd(), 'infra/postgres/001_schema.sql'), 'utf-8');
+const migrations = ['001_schema.sql', '002_account_number.sql'];
 
 async function main() {
-  await pool.query(sql);
+  for (const name of migrations) {
+    const path = resolve(process.cwd(), 'infra/postgres', name);
+    if (!existsSync(path)) continue;
+    const sql = readFileSync(path, 'utf-8');
+    await pool.query(sql);
+    console.log(`Ran ${name}`);
+  }
   console.log('Migration complete');
   await pool.end();
 }

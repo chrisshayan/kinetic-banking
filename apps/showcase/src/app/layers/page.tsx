@@ -1,4 +1,9 @@
 import { CLOSection } from './clo-section';
+import { CoachSection } from './coach-section';
+import { TruthSection } from './truth-section';
+import { ISCSection } from './isc-section';
+import { NudgeSection } from './nudge-section';
+import { FeedbackSection } from './feedback-section';
 
 export default function LayersPage() {
   const layers = [
@@ -9,6 +14,15 @@ export default function LayersPage() {
     { id: 'nudge', name: 'Financial Coach Nudge', color: 'amber' },
     { id: 'feedback', name: 'Outcome Feedback Loop', color: 'emerald' },
   ];
+
+  const sections: Record<string, React.ReactNode> = {
+    isc: <ISCSection />,
+    truth: <TruthSection />,
+    clo: <CLOSection />,
+    coach: <CoachSection />,
+    nudge: <NudgeSection />,
+    feedback: <FeedbackSection />,
+  };
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 p-8">
@@ -21,9 +35,9 @@ export default function LayersPage() {
               className="p-4 rounded-lg border border-slate-700 bg-slate-900/50"
             >
               <span className="font-medium">{layer.name}</span>
-              {layer.id === 'clo' && (
+              {sections[layer.id] && (
                 <div className="mt-4">
-                  <CLOSection />
+                  {sections[layer.id]}
                 </div>
               )}
             </div>

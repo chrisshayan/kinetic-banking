@@ -1,9 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { runCoachChat } from '@/lib/agents/coach-agent';
+import { getCustomerById, getAccountsByCustomerId } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
-  const message = body.message ?? '';
-  return NextResponse.json({
-    reply: `Coach: I'd be happy to help with "${message}". (Placeholder — LangGraph integration pending)`,
-  });
+  const message = String(body.message ?? '').trim();
+  const customerId = body.customerId ?? 'demo-activation';
+
+  if (!message) {
+    return NextResponse.json(
+      { error: 'message is required' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const customer = await getCustomerById(customerId);
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Customer not found', customerId },
+        { status: 404 }
+      );
+    }
+
+    const accounts = await getAccountsByCustomerId(customerId);
+    const truth = {
+      id: customer.id,
+      displayName: customer.display_name,
+      accounts: accounts.map((a) => ({
+        balance: Number(a.balance),
+        productType: a.product_type,
+      })),
+    };
+
+    const result = runCoachChat(customerId, message, truth);
+    return NextResponse.json(result);
+  } catch (err) {
+    console.error('[coach/chat]', err);
+    return NextResponse.json(
+      { error: 'Failed to get Coach reply' },
+      { status: 500 }
+    );
+  }
 }

@@ -1,11 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { runCoachNudge } from '@/lib/agents/coach-agent';
+import { getCustomerById, getAccountsByCustomerId } from '@/lib/db';
+
+const COACH_DOMAINS = [
+  'health_assessment',
+  'anomaly_detection',
+  'peer_benchmarking',
+  'early_warnings',
+  'weekly_reflection',
+] as const;
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
-  const customerId = body.customerId ?? 'demo-customer';
-  return NextResponse.json({
-    customerId,
-    type: 'weekly_reflection',
-    message: 'Your spending was 12% below average this week. Great job!',
-  });
+  const customerId = body.customerId ?? 'demo-activation';
+  const domain = body.domain ?? 'weekly_reflection';
+
+  if (!COACH_DOMAINS.includes(domain)) {
+    return NextResponse.json(
+      { error: 'Invalid domain', valid: COACH_DOMAINS },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const customer = await getCustomerById(customerId);
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Customer not found', customerId },
+        { status: 404 }
+      );
+    }
+
+    const accounts = await getAccountsByCustomerId(customerId);
+    const truth = {
+      id: customer.id,
+      displayName: customer.display_name,
+      accounts: accounts.map((a) => ({
+        balance: Number(a.balance),
+        productType: a.product_type,
+      })),
+    };
+
+    const result = runCoachNudge(customerId, domain, truth);
+    return NextResponse.json(result);
+  } catch (err) {
+    console.error('[coach/nudge]', err);
+    return NextResponse.json(
+      { error: 'Failed to generate nudge' },
+      { status: 500 }
+    );
+  }
 }

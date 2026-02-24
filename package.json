@@ -15,7 +15,8 @@
     "clo": "pnpm --filter clo dev",
     "coach": "pnpm --filter coach dev",
     "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "db:seed-sarah": "tsx scripts/seed-sarah-story.ts"
   },
   "engines": {
     "node": ">=20"
