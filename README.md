@@ -2,6 +2,9 @@
 
 Banking OS Full Vision — Shared Customer Truth, CLO, Financial Coach, Intelligence Supply Chain, Outcome Feedback Loop.
 
+## Watch the Demo
+[![The Invisible Bank - Why the Future of Banking is an Empty Screen becoming a Kinetic Banking](https://img.youtube.com/vi/vzvIOEByqDM/maxresdefault.jpg)](https://youtu.be/vzvIOEByqDM)
+
 ## Project Structure
 
 ```
