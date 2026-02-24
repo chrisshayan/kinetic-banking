@@ -5,6 +5,10 @@ export default function Home() {
         <h1 className="text-3xl font-bold text-cyan-400 mb-2">Kinetic Banking OS</h1>
         <p className="text-slate-400 mb-8">Banking OS Full Vision — Showcase</p>
         <div className="grid gap-4 text-sm">
+          <a href="/demo" className="block p-4 rounded-lg border border-cyan-500/50 bg-cyan-500/10 hover:bg-cyan-500/20 transition">
+            <span className="font-medium text-cyan-400">Run Demo</span>
+            <span className="block text-slate-400 text-xs mt-1">Seed → NBA → Nudge → Feedback Loop (ontology-driven)</span>
+          </a>
           <a href="/layers" className="block p-4 rounded-lg border border-slate-700 hover:border-cyan-500/50 hover:bg-slate-800/50 transition">
             Layer Explorer
           </a>

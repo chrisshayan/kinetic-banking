@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       })),
     };
 
-    const nba = runCLO(customerId, truth);
+    const nba = await runCLO(customerId, truth);
 
     const accountStatus = accounts.some((a) => a.status === 'ACTIVE') ? 'ACTIVE' : accounts[0]?.status ?? 'UNKNOWN';
     const guard = await checkGuardrails({

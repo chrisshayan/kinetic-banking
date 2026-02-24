@@ -90,6 +90,16 @@ pnpm writeback   # Consumes decisions.outcomes → Decision History
 
 CLO NBA publishes to Kafka; writeback persists to PostgreSQL and triggers MLflow feedback runs.
 
+### 7. Run Demo (End-to-end)
+
+```bash
+# Ensure: docker compose up -d, pnpm writeback, pnpm isc:seed-ontology
+pnpm showcase
+# Open http://localhost:3000/demo → Run Demo
+```
+
+Flow: Seed Sarah → NBA (Neo4j ontology) → Coach nudge → Feedback loop.
+
 ## Environment
 
 Copy `.env.example` to `.env` and configure:

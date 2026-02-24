@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 export function CLOSection() {
   const [customerId, setCustomerId] = useState('');
-  const [nba, setNba] = useState<{ domain: string; action: string; confidence: number; reasoning?: string; displayMessage?: string } | null>(null);
+  const [nba, setNba] = useState<{ domain: string; action: string; confidence: number; reasoning?: string; displayMessage?: string; ontologyDriven?: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +36,7 @@ export function CLOSection() {
     <div className="p-4 rounded-lg border border-green-500/30 bg-green-500/5">
       <h3 className="font-semibold text-green-400 mb-3">CLO — Next-Best-Action</h3>
       <p className="text-slate-400 text-xs mb-3">
-        Try: demo-acquisition, demo-activation, demo-expansion, demo-retention (run <code className="bg-slate-800 px-1 rounded">pnpm db:seed-demo</code> first)
+        Try: sarah-chen (run <a href="/demo" className="text-cyan-400 hover:underline">Run Demo</a> first) or demo-acquisition, demo-activation, demo-expansion, demo-retention
       </p>
       <div className="flex gap-2 mb-3">
         <input
@@ -68,6 +68,7 @@ export function CLOSection() {
             <span>Confidence: <strong className="text-slate-200">{(nba.confidence * 100).toFixed(0)}%</strong></span>
           </div>
           {nba.reasoning && <p className="text-slate-500 text-xs">{nba.reasoning}</p>}
+          {nba.ontologyDriven && <p className="text-emerald-500/80 text-xs">Driven by Neo4j ontology</p>}
         </div>
       )}
     </div>
