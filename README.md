@@ -82,6 +82,14 @@ pnpm isc:seed-ontology # load Neo4j ontology
 
 See [isc/README.md](isc/README.md) for dbt, Feast, MLflow setup. CLO decisions are guarded by OPA (block if account closed or confidence < 0.7).
 
+### 6. Phase 6 — Outcome Feedback Loop
+
+```bash
+pnpm writeback   # Consumes decisions.outcomes → Decision History
+```
+
+CLO NBA publishes to Kafka; writeback persists to PostgreSQL and triggers MLflow feedback runs.
+
 ## Environment
 
 Copy `.env.example` to `.env` and configure:

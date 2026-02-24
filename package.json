@@ -18,7 +18,8 @@
     "docker:down": "docker compose down",
     "db:seed-sarah": "tsx scripts/seed-sarah-story.ts",
     "isc:dbt": "cd isc/dbt && dbt run",
-    "isc:seed-ontology": "docker exec -i $(docker ps -qf ancestor=neo4j:5-community | head -1) cypher-shell -u neo4j -p kinetic123 < isc/ontology/seed.cypher"
+    "isc:seed-ontology": "docker exec -i $(docker ps -qf ancestor=neo4j:5-community | head -1) cypher-shell -u neo4j -p kinetic123 < isc/ontology/seed.cypher",
+    "writeback": "pnpm --filter writeback dev"
   },
   "engines": {
     "node": ">=20"

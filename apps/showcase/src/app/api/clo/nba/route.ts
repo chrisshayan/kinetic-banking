@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runCLO } from '@/lib/agents/clo-agent';
-import { getCustomerById, getAccountsByCustomerId, getDecisionHistory, insertDecision } from '@/lib/db';
+import { getCustomerById, getAccountsByCustomerId, getDecisionHistory } from '@/lib/db';
 import { checkGuardrails } from '@/lib/opa';
+import { publishDecisionOutcome } from '@/lib/kafka';
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
@@ -59,10 +60,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await insertDecision(customerId, nba.domain, nba.action, {
-      confidence: nba.confidence,
-      reasoning: nba.reasoning,
+    const published = await publishDecisionOutcome({
+      customer_id: customerId,
+      domain: nba.domain,
+      action: nba.action,
+      outcome: 'recommended',
+      metadata: { confidence: nba.confidence, reasoning: nba.reasoning },
     });
+    if (!published) {
+      const { insertDecision } = await import('@/lib/db');
+      await insertDecision(customerId, nba.domain, nba.action, {
+        confidence: nba.confidence,
+        reasoning: nba.reasoning,
+      });
+    }
 
     return NextResponse.json(nba);
   } catch (err) {

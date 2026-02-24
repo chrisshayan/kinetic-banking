@@ -3,8 +3,8 @@
 import { useState } from 'react';
 
 export function FeedbackSection() {
-  const [customerId, setCustomerId] = useState('demo-activation');
-  const [decisions, setDecisions] = useState<Array<{ domain: string; action: string; timestamp: string }>>([]);
+  const [customerId, setCustomerId] = useState('sarah-chen');
+  const [decisions, setDecisions] = useState<Array<{ domain: string; action: string; outcome?: string; timestamp: string }>>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +32,10 @@ export function FeedbackSection() {
     <div className="p-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5">
       <h3 className="font-semibold text-emerald-400 mb-3">Outcome Feedback Loop</h3>
       <p className="text-slate-400 text-xs mb-3">
-        Decision History — CLO/Coach decisions persist here for retraining
+        CLO → Kafka (decisions.outcomes) → Writeback → Decision History → MLflow. Same data as{' '}
+        <a href={`/api/customer-truth/${customerId}`} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">
+          /api/customer-truth/{customerId || '…'}
+        </a>
       </p>
       <div className="flex gap-2 mb-3">
         <input
@@ -58,9 +61,10 @@ export function FeedbackSection() {
               key={i}
               className="flex gap-3 text-sm py-2 border-b border-slate-700 last:border-0"
             >
-              <span className="text-emerald-400 font-mono w-24">{d.domain}</span>
+              <span className="text-emerald-400 font-mono w-24 shrink-0">{d.domain}</span>
               <span className="text-slate-300">{d.action}</span>
-              <span className="text-slate-500 text-xs">{new Date(d.timestamp).toLocaleString()}</span>
+              <span className="text-slate-500 text-xs shrink-0">{d.outcome ?? '—'}</span>
+              <span className="text-slate-500 text-xs ml-auto">{new Date(d.timestamp).toLocaleString()}</span>
             </div>
           ))}
         </div>
