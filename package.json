@@ -9,6 +9,7 @@
     "mifos-mock": "pnpm --filter mifos-mock dev",
     "kafka-consumer": "pnpm --filter kafka-consumer dev",
     "db:migrate": "tsx scripts/migrate.ts",
+    "db:seed-demo": "tsx scripts/seed-demo-customers.ts",
     "showcase": "pnpm --dir apps/showcase dev",
     "customer-truth": "pnpm --filter customer-truth dev",
     "clo": "pnpm --filter clo dev",

@@ -1,3 +1,5 @@
+import { CLOSection } from './clo-section';
+
 export default function LayersPage() {
   const layers = [
     { id: 'isc', name: 'Intelligence Supply Chain', color: 'purple' },
@@ -19,6 +21,11 @@ export default function LayersPage() {
               className="p-4 rounded-lg border border-slate-700 bg-slate-900/50"
             >
               <span className="font-medium">{layer.name}</span>
+              {layer.id === 'clo' && (
+                <div className="mt-4">
+                  <CLOSection />
+                </div>
+              )}
             </div>
           ))}
         </div>
