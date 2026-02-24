@@ -1,8 +1,11 @@
 /**
  * Mifos-like Core Banking Mock
- * REST API for clients, accounts, transactions + Kafka event emission
+ * REST API for clients, accounts, transactions + Kafka event emission + RudderStack CDP
  */
 
+import { resolve } from 'path';
+import { config } from 'dotenv';
+config({ path: resolve(process.cwd(), '../../.env') });
 import express from 'express';
 import { createKafkaProducer } from './kafka.js';
 import { setupRoutes } from './routes.js';
@@ -24,4 +27,10 @@ async function main() {
   });
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  if (err?.code === 'EADDRINUSE') {
+    console.error(`Port ${process.env.PORT ?? 3001} is in use. Kill the process or set PORT=3002`);
+  }
+  console.error(err);
+  process.exit(1);
+});

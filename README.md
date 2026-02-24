@@ -44,6 +44,12 @@ pnpm install
 docker compose up -d
 ```
 
+**RudderStack CDP (optional):** Add `RUDDERSTACK_WORKSPACE_TOKEN` to `.env`, then:
+```bash
+docker compose --profile cdp up -d
+```
+See [docs/PHASE-1-RUDDERSTACK-SETUP.md](docs/PHASE-1-RUDDERSTACK-SETUP.md).
+
 ### 3. Seed Mifos mock & run services
 
 ```bash

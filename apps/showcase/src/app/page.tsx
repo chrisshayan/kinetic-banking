@@ -22,6 +22,12 @@ export default function Home() {
             <li><a href="/api/customer-truth/demo-customer" className="text-cyan-400 hover:underline">/api/customer-truth/demo-customer</a></li>
             <li><a href="/api/clo/health" className="text-cyan-400 hover:underline">/api/clo/health</a></li>
             <li><a href="/api/coach/health" className="text-cyan-400 hover:underline">/api/coach/health</a></li>
+            <li><a href="/api/cdp/health" className="text-cyan-400 hover:underline">/api/cdp/health</a></li>
+          </ul>
+          <p className="font-medium text-slate-300 mt-4 mb-2">CDP (RudderStack) — POST</p>
+          <ul className="space-y-1 font-mono">
+            <li>/api/cdp/track — body: {"{ userId, event, properties }"}</li>
+            <li>/api/cdp/identify — body: {"{ userId, traits }"}</li>
           </ul>
         </div>
       </div>

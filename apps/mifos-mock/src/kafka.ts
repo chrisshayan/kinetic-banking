@@ -3,7 +3,7 @@
  * Topics: mifos.clients, mifos.accounts, mifos.transactions
  */
 
-import { Kafka } from 'kafkajs';
+import { Kafka, Partitioners } from 'kafkajs';
 
 const kafka = new Kafka({
   clientId: 'mifos-mock',
@@ -11,7 +11,9 @@ const kafka = new Kafka({
 });
 
 export async function createKafkaProducer() {
-  const producer = kafka.producer();
+  const producer = kafka.producer({
+    createPartitioner: Partitioners.LegacyPartitioner,
+  });
   await producer.connect();
   return producer;
 }

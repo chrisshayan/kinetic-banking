@@ -5,6 +5,7 @@
 import { Express } from 'express';
 import { db } from './db.js';
 import { emitEvent } from './kafka.js';
+import { sendToRudderStack, identifyToRudderStack } from './rudderstack.js';
 import { randomUUID } from 'crypto';
 
 type KafkaProducer = Awaited<ReturnType<typeof import('./kafka.js').createKafkaProducer>>;
@@ -27,8 +28,10 @@ export function setupRoutes(app: Express, producer: KafkaProducer) {
     const id = randomUUID();
     const { display_name, status = 'PENDING' } = req.body;
     db.prepare('INSERT INTO clients (id, display_name, status) VALUES (?, ?, ?)').run(id, display_name, status);
-    const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(id);
+    const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(id) as Record<string, unknown>;
     await emitEvent(producer, 'mifos.clients', 'client.created', client);
+    await identifyToRudderStack(id, { display_name: client.display_name, status: client.status });
+    await sendToRudderStack('client.created', id, client);
     res.status(201).json(client);
   });
 
@@ -52,8 +55,9 @@ export function setupRoutes(app: Express, producer: KafkaProducer) {
     db.prepare(
       'INSERT INTO accounts (id, client_id, product_type, status, balance, currency) VALUES (?, ?, ?, ?, ?, ?)'
     ).run(id, client_id, product_type, status, balance, currency);
-    const account = db.prepare('SELECT * FROM accounts WHERE id = ?').get(id);
+    const account = db.prepare('SELECT * FROM accounts WHERE id = ?').get(id) as Record<string, unknown>;
     await emitEvent(producer, 'mifos.accounts', 'account.opened', account);
+    await sendToRudderStack('account.opened', client_id, account);
     res.status(201).json(account);
   });
 
@@ -77,8 +81,10 @@ export function setupRoutes(app: Express, producer: KafkaProducer) {
       'INSERT INTO transactions (id, account_id, type, amount, balance_after, description) VALUES (?, ?, ?, ?, ?, ?)'
     ).run(id, account_id, type, amount, balanceAfter, description ?? '');
     db.prepare('UPDATE accounts SET balance = ?, updated_at = datetime("now") WHERE id = ?').run(balanceAfter, account_id);
-    const tx = db.prepare('SELECT * FROM transactions WHERE id = ?').get(id);
+    const tx = db.prepare('SELECT * FROM transactions WHERE id = ?').get(id) as Record<string, unknown>;
+    const acct = db.prepare('SELECT client_id FROM accounts WHERE id = ?').get(account_id) as { client_id: string } | undefined;
     await emitEvent(producer, 'mifos.transactions', 'transaction.completed', tx);
+    await sendToRudderStack('transaction.completed', acct?.client_id ?? account_id, { ...tx, account_id });
     res.status(201).json(tx);
   });
 

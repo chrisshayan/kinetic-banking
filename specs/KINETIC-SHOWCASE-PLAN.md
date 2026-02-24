@@ -159,7 +159,7 @@ On create/update, mock publishes to Kafka:
 | Kafka topics | `mifos.transactions`, `mifos.accounts`, `customer.events` |
 | RudderStack setup | Event collection, Kafka destination |
 
-**Outcome:** Events flowing from mock → Kafka → RudderStack.
+**Outcome:** Events flowing from mock → Kafka; mock → RudderStack → Kafka (when configured).
 
 ---
 
