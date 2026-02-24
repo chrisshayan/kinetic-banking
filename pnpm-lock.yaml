@@ -6,7 +6,14 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      pg:
+        specifier: ^8.13.1
+        version: 8.18.0
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
 
   apps/mifos-mock:
     dependencies:
@@ -56,6 +63,9 @@ importers:
       next:
         specifier: ^15.0.3
         version: 15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      pg:
+        specifier: ^8.13.1
+        version: 8.18.0
       react:
         specifier: ^19.0.0
         version: 19.2.4
@@ -69,6 +79,9 @@ importers:
       '@types/node':
         specifier: ^22.9.0
         version: 22.19.11
+      '@types/pg':
+        specifier: ^8.11.10
+        version: 8.16.0
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.14
@@ -181,6 +194,28 @@ importers:
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.25
+      '@types/node':
+        specifier: ^22.9.0
+        version: 22.19.11
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
+  services/kafka-consumer:
+    dependencies:
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.1
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
+      pg:
+        specifier: ^8.13.1
+        version: 8.18.0
+    devDependencies:
       '@types/node':
         specifier: ^22.9.0
         version: 22.19.11
@@ -791,6 +826,9 @@ packages:
 
   '@types/node@22.19.11':
     resolution: {integrity: sha512-BH7YwL6rA93ReqeQS1c4bsPpcfOmJasG+Fkr6Y59q83f9M1WcBRHR2vM+P9eOisYRcN3ujQoiZY8uk5W+1WL8w==}
+
+  '@types/pg@8.16.0':
+    resolution: {integrity: sha512-RmhMd/wD+CF8Dfo+cVIy3RR5cl8CyfXQ0tGgW6XBL8L4LM/UTEbNXYRbLwU6w+CgrKBNbrQWt4FUtTfaU5jSYQ==}
 
   '@types/qs@6.14.0':
     resolution: {integrity: sha512-eOunJqu0K1923aExK6y8p6fsihYEn/BYuQ4g0CxAAgFc4b/ZLN4CrsRZ55srTdqoiLzU2B2evC+apEIxprEzkQ==}
@@ -3327,6 +3365,12 @@ snapshots:
   '@types/node@22.19.11':
     dependencies:
       undici-types: 6.21.0
+
+  '@types/pg@8.16.0':
+    dependencies:
+      '@types/node': 22.19.11
+      pg-protocol: 1.11.0
+      pg-types: 2.2.0
 
   '@types/qs@6.14.0': {}
 

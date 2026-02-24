@@ -50,13 +50,17 @@ docker compose --profile cdp up -d
 ```
 See [docs/PHASE-1-RUDDERSTACK-SETUP.md](docs/PHASE-1-RUDDERSTACK-SETUP.md).
 
-### 3. Seed Mifos mock & run services
+### 3. Phase 2 — Database & Kafka consumer
 
 ```bash
+pnpm db:migrate
 pnpm --filter mifos-mock seed
 pnpm mifos-mock &
+pnpm kafka-consumer &
 pnpm showcase
 ```
+
+See [docs/PHASE-2-SETUP.md](docs/PHASE-2-SETUP.md) for details.
 
 ### 4. Open showcase
 

@@ -7,6 +7,8 @@
     "dev": "pnpm run -r dev --parallel",
     "build": "pnpm run -r build",
     "mifos-mock": "pnpm --filter mifos-mock dev",
+    "kafka-consumer": "pnpm --filter kafka-consumer dev",
+    "db:migrate": "tsx scripts/migrate.ts",
     "showcase": "pnpm --dir apps/showcase dev",
     "customer-truth": "pnpm --filter customer-truth dev",
     "clo": "pnpm --filter clo dev",
@@ -17,5 +19,9 @@
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "pnpm@9.0.6"
+  "packageManager": "pnpm@9.0.6",
+  "devDependencies": {
+    "pg": "^8.13.1",
+    "tsx": "^4.19.2"
+  }
 }

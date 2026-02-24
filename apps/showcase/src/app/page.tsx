@@ -20,6 +20,7 @@ export default function Home() {
           <ul className="space-y-1 font-mono">
             <li><a href="/api/customer-truth/health" className="text-cyan-400 hover:underline">/api/customer-truth/health</a></li>
             <li><a href="/api/customer-truth/demo-customer" className="text-cyan-400 hover:underline">/api/customer-truth/demo-customer</a></li>
+            <li><a href="/api/customer-truth/search?q=alice" className="text-cyan-400 hover:underline">/api/customer-truth/search?q=alice</a></li>
             <li><a href="/api/clo/health" className="text-cyan-400 hover:underline">/api/clo/health</a></li>
             <li><a href="/api/coach/health" className="text-cyan-400 hover:underline">/api/coach/health</a></li>
             <li><a href="/api/cdp/health" className="text-cyan-400 hover:underline">/api/cdp/health</a></li>
