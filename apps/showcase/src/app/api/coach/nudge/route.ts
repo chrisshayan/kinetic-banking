@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { runCoachNudge } from '@/lib/agents/coach-agent';
 import { getCustomerById, getAccountsByCustomerId } from '@/lib/db';
 import { getHealthScore } from '@/lib/health-score';
+import { getCustomerPeerFeatures } from '@/lib/db';
 import { logCoachNudge } from '@/lib/mlflow';
 
 const COACH_DOMAINS = [
@@ -33,8 +34,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const accounts = await getAccountsByCustomerId(customerId);
-    const healthResult = await getHealthScore(customerId);
+    const [accounts, healthResult, peerFeatures] = await Promise.all([
+      getAccountsByCustomerId(customerId),
+      getHealthScore(customerId),
+      getCustomerPeerFeatures(customerId),
+    ]);
     const truth = {
       id: customer.id,
       displayName: customer.display_name,
@@ -44,6 +48,7 @@ export async function POST(request: NextRequest) {
       })),
       healthScore: healthResult?.score,
       features: healthResult?.features,
+      peerFeatures: peerFeatures ?? undefined,
     };
 
     const result = runCoachNudge(customerId, domain, truth);

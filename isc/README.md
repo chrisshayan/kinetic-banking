@@ -22,10 +22,18 @@ docker compose up -d
 
 ### 2. dbt (semantic layer)
 
+Use **dbt-core** with the Postgres adapter (not the dbt Cloud CLI):
+
 ```bash
-pip install dbt-postgres
+python -m venv .venv-isc
+source .venv-isc/bin/activate   # or .venv-isc\Scripts\activate on Windows
+pip install -r isc/requirements.txt
 cd isc/dbt && dbt run
 ```
+
+**If you see `dbt_cloud.yml credentials file not found`:** You likely have the dbt Cloud CLI installed instead of dbt-core. Use a fresh virtual environment and install only `dbt-postgres`. Do not install `dbt` or `dbt-cloud`.
+
+**Note:** Peer benchmarking and health features work without dbt — the app falls back to raw SQL when `fct_customer_health` / `fct_customer_peers` views are missing.
 
 ### 3. Neo4j ontology
 

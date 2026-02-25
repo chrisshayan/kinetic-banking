@@ -12,6 +12,11 @@ const DEFAULT_SCENARIOS: Scenario[] = [
   { id: 'demo-activation', name: 'Sam Newcomer', domain: 'ACTIVATION', desc: 'NEW_TO_BANK, 1 account → complete_onboarding' },
   { id: 'demo-expansion', name: 'Alex Power User', domain: 'EXPANSION', desc: 'ACTIVE, 2 accounts → add_savings' },
   { id: 'demo-retention', name: 'Casey At Risk', domain: 'RETENTION', desc: 'CHURN_RISK → win_back' },
+  { id: 'peer-top-25', name: 'Morgan Top Saver', domain: 'EXPANSION', desc: 'Top 25% of peers — Coach "compare"' },
+  { id: 'peer-median', name: 'Riley Middle Ground', domain: 'EXPANSION', desc: 'Median of ACTIVE peers' },
+  { id: 'peer-bottom-25', name: 'Jordan Building Up', domain: 'EXPANSION', desc: 'Bottom 25% — room to grow' },
+  { id: 'peer-new-top', name: 'Sam Strong Start', domain: 'ACTIVATION', desc: 'NEW_TO_BANK, top of segment' },
+  { id: 'peer-churn-low', name: 'Casey Needs Help', domain: 'RETENTION', desc: 'CHURN_RISK, low vs peers' },
 ];
 
 type NBAData = {

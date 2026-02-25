@@ -1,0 +1,4 @@
+# ISC components — use dbt-core (not dbt Cloud CLI)
+dbt-postgres>=1.5,<3
+mlflow>=2.0
+scikit-learn>=1.0

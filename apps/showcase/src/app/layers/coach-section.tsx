@@ -43,6 +43,10 @@ export function CoachSection() {
   return (
     <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/5">
       <h3 className="font-semibold text-amber-400 mb-3">Coach — Generate Nudge</h3>
+      <p className="text-slate-400 text-xs mb-3">
+        peer_benchmarking uses dbt fct_customer_peers (life_stage percentiles). Try: peer-top-25, peer-median,
+        peer-bottom-25 (seed demo first).
+      </p>
       <div className="flex flex-wrap gap-2 mb-3">
         <input
           type="text"

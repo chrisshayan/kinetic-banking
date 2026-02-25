@@ -32,6 +32,37 @@ const SCENARIOS = [
     domain: 'RETENTION',
     desc: 'CHURN_RISK, 1 account → win_back, retention_offer',
   },
+  // Peer benchmarking scenarios (use Coach "compare" or "benchmark" to see percentile-based replies)
+  {
+    id: 'peer-top-25',
+    name: 'Morgan Top Saver',
+    domain: 'EXPANSION',
+    desc: 'ACTIVE, top 25% of peers — high balance vs segment',
+  },
+  {
+    id: 'peer-median',
+    name: 'Riley Middle Ground',
+    domain: 'EXPANSION',
+    desc: 'ACTIVE, median of peers — average for segment',
+  },
+  {
+    id: 'peer-bottom-25',
+    name: 'Jordan Building Up',
+    domain: 'EXPANSION',
+    desc: 'ACTIVE, bottom 25% — room to grow vs peers',
+  },
+  {
+    id: 'peer-new-top',
+    name: 'Sam Strong Start',
+    domain: 'ACTIVATION',
+    desc: 'NEW_TO_BANK, top of segment — ahead of new customers',
+  },
+  {
+    id: 'peer-churn-low',
+    name: 'Casey Needs Help',
+    domain: 'RETENTION',
+    desc: 'CHURN_RISK, low balance vs at-risk peers',
+  },
 ] as const;
 
 /**
@@ -54,6 +85,8 @@ export async function POST(request: NextRequest) {
       ? SCENARIOS.filter((s) => s.id === scenarioId)
       : SCENARIOS;
 
+    await seedPeerPool(pool, now);
+
     for (const s of toSeed) {
       if (s.id === 'sarah-chen') {
         await seedSarah(pool, now, twoMonthsAgo, sixWeeksAgo, threeWeeksAgo);
@@ -65,6 +98,16 @@ export async function POST(request: NextRequest) {
         await seedExpansion(pool, now);
       } else if (s.id === 'demo-retention') {
         await seedRetention(pool, now);
+      } else if (s.id === 'peer-top-25') {
+        await seedPeerTop25(pool, now);
+      } else if (s.id === 'peer-median') {
+        await seedPeerMedian(pool, now);
+      } else if (s.id === 'peer-bottom-25') {
+        await seedPeerBottom25(pool, now);
+      } else if (s.id === 'peer-new-top') {
+        await seedPeerNewTop(pool, now);
+      } else if (s.id === 'peer-churn-low') {
+        await seedPeerChurnLow(pool, now);
       }
     }
 
@@ -199,4 +242,161 @@ async function seedRetention(db: typeof pool, now: Date) {
     [now]
   );
   await db.query(`DELETE FROM decision_history WHERE customer_id = 'demo-retention'`);
+}
+
+/** Seed diverse peer pool for percentile computation. Run before scenario seeds. */
+async function seedPeerPool(db: typeof pool, now: Date) {
+  const activePeers = [
+    ['peer-active-1', 1000],
+    ['peer-active-2', 2000],
+    ['peer-active-3', 3000],
+    ['peer-active-4', 4000],
+    ['peer-active-5', 5000],
+    ['peer-active-6', 6000],
+    ['peer-active-7', 7000],
+    ['peer-active-8', 8000],
+    ['peer-active-9', 10000],
+    ['peer-active-10', 12000],
+  ];
+  for (const [id, bal] of activePeers) {
+    await db.query(
+      `INSERT INTO customers (id, display_name, status, life_stage, created_at, updated_at)
+       VALUES ($1, $2, 'ACTIVE', 'ACTIVE', $3, $4)
+       ON CONFLICT (id) DO UPDATE SET life_stage = 'ACTIVE', updated_at = $4`,
+      [id, `Peer ${id}`, now, now]
+    );
+    await db.query(
+      `INSERT INTO accounts (id, customer_id, product_type, status, balance, currency, created_at)
+       VALUES ($1, $2, 'CURRENT', 'ACTIVE', $3, 'USD', $4)
+       ON CONFLICT (id) DO UPDATE SET balance = $3`,
+      [`acc-${id}`, id, bal, now]
+    );
+  }
+  const newPeers = [
+    ['peer-new-1', 200],
+    ['peer-new-2', 800],
+    ['peer-new-3', 1500],
+    ['peer-new-4', 3000],
+    ['peer-new-5', 5000],
+  ];
+  for (const [id, bal] of newPeers) {
+    await db.query(
+      `INSERT INTO customers (id, display_name, status, life_stage, created_at, updated_at)
+       VALUES ($1, $2, 'ACTIVE', 'NEW_TO_BANK', $3, $4)
+       ON CONFLICT (id) DO UPDATE SET life_stage = 'NEW_TO_BANK', updated_at = $4`,
+      [id, `Peer ${id}`, now, now]
+    );
+    await db.query(
+      `INSERT INTO accounts (id, customer_id, product_type, status, balance, currency, created_at)
+       VALUES ($1, $2, 'CURRENT', 'ACTIVE', $3, 'USD', $4)
+       ON CONFLICT (id) DO UPDATE SET balance = $3`,
+      [`acc-${id}`, id, bal, now]
+    );
+  }
+  const churnPeers = [
+    ['peer-churn-1', 50],
+    ['peer-churn-2', 200],
+    ['peer-churn-3', 500],
+    ['peer-churn-4', 800],
+  ];
+  for (const [id, bal] of churnPeers) {
+    await db.query(
+      `INSERT INTO customers (id, display_name, status, life_stage, created_at, updated_at)
+       VALUES ($1, $2, 'ACTIVE', 'CHURN_RISK', $3, $4)
+       ON CONFLICT (id) DO UPDATE SET life_stage = 'CHURN_RISK', updated_at = $4`,
+      [id, `Peer ${id}`, now, now]
+    );
+    await db.query(
+      `INSERT INTO accounts (id, customer_id, product_type, status, balance, currency, created_at)
+       VALUES ($1, $2, 'CURRENT', 'ACTIVE', $3, 'USD', $4)
+       ON CONFLICT (id) DO UPDATE SET balance = $3`,
+      [`acc-${id}`, id, bal, now]
+    );
+  }
+  // Seed peer scenario customers so they're always available (Coach, Layer Explorer)
+  await seedPeerTop25(db, now);
+  await seedPeerMedian(db, now);
+  await seedPeerBottom25(db, now);
+  await seedPeerNewTop(db, now);
+  await seedPeerChurnLow(db, now);
+}
+
+async function seedPeerTop25(db: typeof pool, now: Date) {
+  await db.query(
+    `INSERT INTO customers (id, display_name, status, life_stage, created_at, updated_at)
+     VALUES ('peer-top-25', 'Morgan Top Saver', 'ACTIVE', 'ACTIVE', $1, $2)
+     ON CONFLICT (id) DO UPDATE SET display_name = EXCLUDED.display_name, life_stage = 'ACTIVE', updated_at = $2`,
+    [now, now]
+  );
+  await db.query(
+    `INSERT INTO accounts (id, customer_id, product_type, status, balance, currency, created_at)
+     VALUES ('acc-peer-top-25', 'peer-top-25', 'CURRENT', 'ACTIVE', 22000, 'USD', $1)
+     ON CONFLICT (id) DO UPDATE SET balance = 22000`,
+    [now]
+  );
+  await db.query(`DELETE FROM decision_history WHERE customer_id = 'peer-top-25'`);
+}
+
+async function seedPeerMedian(db: typeof pool, now: Date) {
+  await db.query(
+    `INSERT INTO customers (id, display_name, status, life_stage, created_at, updated_at)
+     VALUES ('peer-median', 'Riley Middle Ground', 'ACTIVE', 'ACTIVE', $1, $2)
+     ON CONFLICT (id) DO UPDATE SET display_name = EXCLUDED.display_name, life_stage = 'ACTIVE', updated_at = $2`,
+    [now, now]
+  );
+  await db.query(
+    `INSERT INTO accounts (id, customer_id, product_type, status, balance, currency, created_at)
+     VALUES ('acc-peer-median', 'peer-median', 'CURRENT', 'ACTIVE', 7500, 'USD', $1)
+     ON CONFLICT (id) DO UPDATE SET balance = 7500`,
+    [now]
+  );
+  await db.query(`DELETE FROM decision_history WHERE customer_id = 'peer-median'`);
+}
+
+async function seedPeerBottom25(db: typeof pool, now: Date) {
+  await db.query(
+    `INSERT INTO customers (id, display_name, status, life_stage, created_at, updated_at)
+     VALUES ('peer-bottom-25', 'Jordan Building Up', 'ACTIVE', 'ACTIVE', $1, $2)
+     ON CONFLICT (id) DO UPDATE SET display_name = EXCLUDED.display_name, life_stage = 'ACTIVE', updated_at = $2`,
+    [now, now]
+  );
+  await db.query(
+    `INSERT INTO accounts (id, customer_id, product_type, status, balance, currency, created_at)
+     VALUES ('acc-peer-bottom-25', 'peer-bottom-25', 'CURRENT', 'ACTIVE', 1500, 'USD', $1)
+     ON CONFLICT (id) DO UPDATE SET balance = 1500`,
+    [now]
+  );
+  await db.query(`DELETE FROM decision_history WHERE customer_id = 'peer-bottom-25'`);
+}
+
+async function seedPeerNewTop(db: typeof pool, now: Date) {
+  await db.query(
+    `INSERT INTO customers (id, display_name, status, life_stage, created_at, updated_at)
+     VALUES ('peer-new-top', 'Sam Strong Start', 'ACTIVE', 'NEW_TO_BANK', $1, $2)
+     ON CONFLICT (id) DO UPDATE SET display_name = EXCLUDED.display_name, life_stage = 'NEW_TO_BANK', updated_at = $2`,
+    [now, now]
+  );
+  await db.query(
+    `INSERT INTO accounts (id, customer_id, product_type, status, balance, currency, created_at)
+     VALUES ('acc-peer-new-top', 'peer-new-top', 'CURRENT', 'ACTIVE', 4500, 'USD', $1)
+     ON CONFLICT (id) DO UPDATE SET balance = 4500`,
+    [now]
+  );
+  await db.query(`DELETE FROM decision_history WHERE customer_id = 'peer-new-top'`);
+}
+
+async function seedPeerChurnLow(db: typeof pool, now: Date) {
+  await db.query(
+    `INSERT INTO customers (id, display_name, status, life_stage, created_at, updated_at)
+     VALUES ('peer-churn-low', 'Casey Needs Help', 'ACTIVE', 'CHURN_RISK', $1, $2)
+     ON CONFLICT (id) DO UPDATE SET display_name = EXCLUDED.display_name, life_stage = 'CHURN_RISK', updated_at = $2`,
+    [now, now]
+  );
+  await db.query(
+    `INSERT INTO accounts (id, customer_id, product_type, status, balance, currency, created_at)
+     VALUES ('acc-peer-churn-low', 'peer-churn-low', 'CURRENT', 'ACTIVE', 75, 'USD', $1)
+     ON CONFLICT (id) DO UPDATE SET balance = 75`,
+    [now]
+  );
+  await db.query(`DELETE FROM decision_history WHERE customer_id = 'peer-churn-low'`);
 }
