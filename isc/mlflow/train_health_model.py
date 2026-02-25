@@ -34,8 +34,13 @@ def train():
         model = LinearRegression()
         model.fit(X, y)
 
-        # Log params and metrics
-        mlflow.log_params({"model_type": "linear_regression", "n_features": len(FEATURE_NAMES)})
+        # Log params and metrics (coef/intercept for Node.js prediction without Python)
+        coef_list = model.coef_.tolist() + [float(model.intercept_)]
+        mlflow.log_params({
+            "model_type": "linear_regression",
+            "n_features": len(FEATURE_NAMES),
+            "model_coef": ",".join(str(round(c, 6)) for c in coef_list),
+        })
         mlflow.log_metric("train_mae", np.mean(np.abs(model.predict(X) - y)))
         mlflow.log_metric("train_r2", model.score(X, y))
 

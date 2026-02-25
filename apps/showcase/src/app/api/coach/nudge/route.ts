@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runCoachNudge } from '@/lib/agents/coach-agent';
 import { getCustomerById, getAccountsByCustomerId } from '@/lib/db';
+import { getHealthScore } from '@/lib/health-score';
 import { logCoachNudge } from '@/lib/mlflow';
 
 const COACH_DOMAINS = [
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     const accounts = await getAccountsByCustomerId(customerId);
+    const healthResult = await getHealthScore(customerId);
     const truth = {
       id: customer.id,
       displayName: customer.display_name,
@@ -40,6 +42,8 @@ export async function POST(request: NextRequest) {
         balance: Number(a.balance),
         productType: a.product_type,
       })),
+      healthScore: healthResult?.score,
+      features: healthResult?.features,
     };
 
     const result = runCoachNudge(customerId, domain, truth);
@@ -50,7 +54,10 @@ export async function POST(request: NextRequest) {
       type: result.type,
     }).catch(() => {});
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      healthSource: healthResult?.source,
+    });
   } catch (err) {
     console.error('[coach/nudge]', err);
     return NextResponse.json(

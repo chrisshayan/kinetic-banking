@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runCoachChat } from '@/lib/agents/coach-agent';
 import { getCustomerById, getAccountsByCustomerId } from '@/lib/db';
+import { getHealthScore } from '@/lib/health-score';
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
@@ -24,6 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     const accounts = await getAccountsByCustomerId(customerId);
+    const healthResult = await getHealthScore(customerId);
     const truth = {
       id: customer.id,
       displayName: customer.display_name,
@@ -31,10 +33,15 @@ export async function POST(request: NextRequest) {
         balance: Number(a.balance),
         productType: a.product_type,
       })),
+      healthScore: healthResult?.score,
+      features: healthResult?.features,
     };
 
     const result = runCoachChat(customerId, message, truth);
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      healthSource: healthResult?.source,
+    });
   } catch (err) {
     console.error('[coach/chat]', err);
     return NextResponse.json(
