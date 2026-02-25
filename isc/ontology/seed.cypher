@@ -5,11 +5,12 @@
 // Clear demo data (optional)
 MATCH (n) DETACH DELETE n;
 
-// Concepts: Life-stages
+// Concepts: Life-stages (CHURN_RISK aligns with CLO routing)
 CREATE (c1:Concept {id: 'NEW_TO_BANK', name: 'New to Bank', type: 'life_stage'})
 CREATE (c2:Concept {id: 'ACTIVE', name: 'Active', type: 'life_stage'})
 CREATE (c3:Concept {id: 'AT_RISK', name: 'At Risk', type: 'life_stage'})
-CREATE (c4:Concept {id: 'CHURNED', name: 'Churned', type: 'life_stage'});
+CREATE (c4:Concept {id: 'CHURN_RISK', name: 'Churn Risk', type: 'life_stage'})
+CREATE (c5:Concept {id: 'CHURNED', name: 'Churned', type: 'life_stage'});
 
 // Concepts: Domains
 CREATE (d1:Concept {id: 'ACQUISITION', name: 'Acquisition', type: 'domain'})
@@ -49,10 +50,12 @@ CREATE (e4:Entity {id: 'Product', type: 'entity'});
 MATCH (a:Action), (d:Concept) WHERE a.domain = d.id AND d.type = 'domain'
 CREATE (a)-[:IN_DOMAIN]->(d);
 
-// Relationships: Life-stage TRIGGERS Action
+// Relationships: Life-stage TRIGGERS Action (graph-driven routing)
 MATCH (c:Concept {id: 'NEW_TO_BANK'}), (a:Action) WHERE a.domain IN ['ACQUISITION', 'ACTIVATION']
 CREATE (c)-[:TRIGGERS]->(a);
 MATCH (c:Concept {id: 'ACTIVE'}), (a:Action) WHERE a.domain IN ['EXPANSION', 'RETENTION']
 CREATE (c)-[:TRIGGERS]->(a);
 MATCH (c:Concept {id: 'AT_RISK'}), (a:Action) WHERE a.domain = 'RETENTION'
+CREATE (c)-[:TRIGGERS]->(a);
+MATCH (c:Concept {id: 'CHURN_RISK'}), (a:Action) WHERE a.domain = 'RETENTION'
 CREATE (c)-[:TRIGGERS]->(a);

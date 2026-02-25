@@ -4,7 +4,7 @@ import { getCustomerById, getAccountsByCustomerId, getDecisionHistory } from '@/
 import { checkGuardrails } from '@/lib/opa';
 import { publishDecisionOutcome } from '@/lib/kafka';
 import { logCLODecision } from '@/lib/mlflow';
-import { getNeo4jBrowserUrl } from '@/lib/ontology';
+import { getNeo4jBrowserUrl, getNeo4jBrowserUrlForLifeStage, getNeo4jBrowserUrlForPath } from '@/lib/ontology';
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
@@ -88,6 +88,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ...nba,
       neo4jBrowserUrl: nba.ontologyDriven ? getNeo4jBrowserUrl(nba.domain) : undefined,
+      neo4jTriggersUrl:
+        nba.ontologyDriven && nba.lifeStage
+          ? getNeo4jBrowserUrlForLifeStage(nba.lifeStage)
+          : undefined,
+      neo4jPathUrl:
+        nba.ontologyDriven && nba.lifeStage
+          ? getNeo4jBrowserUrlForPath(nba.lifeStage, nba.domain)
+          : undefined,
     });
   } catch (err) {
     console.error('[clo/nba]', err);

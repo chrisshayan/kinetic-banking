@@ -25,8 +25,12 @@ type NBAData = {
   displayMessage?: string;
   ontologyDriven?: boolean;
   ontologyActions?: { id: string; domain: string; description?: string }[];
+  lifeStageTriggeredActions?: { id: string; domain: string }[];
   selectedFromOntology?: string;
+  lifeStage?: string;
   neo4jBrowserUrl?: string;
+  neo4jTriggersUrl?: string;
+  neo4jPathUrl?: string;
 };
 
 interface DemoState {
@@ -126,8 +130,8 @@ export default function DemoPage() {
             Neo4j Ontology → CLO → Kafka (decisions.outcomes) → Writeback → Decision History → MLflow
           </p>
             <p className="text-slate-500 text-xs">
-            Pick a scenario below. Each routes to a different CLO domain (ACQUISITION, ACTIVATION, EXPANSION,
-            RETENTION). Neo4j returns actions for that domain; CLO selects the first not yet in decision history.
+            Pick a scenario below. CLO routes by life_stage → domain. Neo4j ontology: life_stage TRIGGERS actions,
+            domain IN_DOMAIN actions. CLO selects the first not yet in decision history.
           </p>
         </div>
 
@@ -178,7 +182,9 @@ export default function DemoPage() {
             detail={state.nba?.displayMessage}
             sub={
               state.nba?.ontologyDriven
-                ? `Neo4j: ${state.nba.ontologyActions?.map((a) => a.id).join(', ')} → ${state.nba.selectedFromOntology ?? state.nba.action}`
+                ? state.nba.lifeStage
+                  ? `${state.nba.lifeStage} → TRIGGERS → ${state.nba.selectedFromOntology ?? state.nba.action}`
+                  : `Neo4j: ${state.nba.ontologyActions?.map((a) => a.id).join(', ')} → ${state.nba.selectedFromOntology ?? state.nba.action}`
                 : state.neo4jConnected === false
                   ? 'Neo4j disconnected (rule-based fallback)'
                   : undefined
@@ -196,22 +202,37 @@ export default function DemoPage() {
           />
         </div>
 
-        {state.step === 'done' && state.nba?.ontologyDriven && state.nba.neo4jBrowserUrl && (
+        {state.step === 'done' && state.nba?.ontologyDriven && (
           <div className="mt-4 p-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5">
             <p className="text-emerald-400 text-xs font-medium mb-2">Neo4j ontology</p>
+            {state.nba.lifeStage && state.nba.lifeStageTriggeredActions && state.nba.lifeStageTriggeredActions.length > 0 && (
+              <p className="text-slate-400 text-xs mb-1">
+                <strong>{state.nba.lifeStage}</strong> → TRIGGERS →{' '}
+                {state.nba.lifeStageTriggeredActions.map((a) => a.id).join(', ')}
+              </p>
+            )}
             <p className="text-slate-400 text-xs mb-2">
-              Domain <strong>{state.nba.domain}</strong> → Actions:{' '}
+              Domain <strong>{state.nba.domain}</strong> → IN_DOMAIN →{' '}
               {state.nba.ontologyActions?.map((a) => a.id).join(', ')} → Selected:{' '}
               <strong className="text-emerald-400">{state.nba.selectedFromOntology ?? state.nba.action}</strong>
             </p>
-            <a
-              href={state.nba.neo4jBrowserUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-cyan-400 hover:underline text-xs"
-            >
-              View in Neo4j Browser →
-            </a>
+            <div className="flex flex-wrap gap-2 text-xs">
+              {state.nba.neo4jPathUrl && (
+                <a href={state.nba.neo4jPathUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">
+                  View full path
+                </a>
+              )}
+              {state.nba.neo4jTriggersUrl && (
+                <a href={state.nba.neo4jTriggersUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">
+                  TRIGGERS
+                </a>
+              )}
+              {state.nba.neo4jBrowserUrl && (
+                <a href={state.nba.neo4jBrowserUrl} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">
+                  IN_DOMAIN
+                </a>
+              )}
+            </div>
           </div>
         )}
 
@@ -233,9 +254,9 @@ export default function DemoPage() {
               <a href="/events" className="text-cyan-400 hover:underline text-sm">
                 Event Stream
               </a>
-              {state.nba?.neo4jBrowserUrl && (
+              {(state.nba?.neo4jPathUrl || state.nba?.neo4jBrowserUrl) && (
                 <a
-                  href={state.nba.neo4jBrowserUrl}
+                  href={state.nba.neo4jPathUrl || state.nba.neo4jBrowserUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-cyan-400 hover:underline text-sm"

@@ -41,6 +41,8 @@ cd isc/dbt && dbt run
 docker exec -i $(docker ps -qf "name=neo4j") cypher-shell -u neo4j -p kinetic123 < isc/ontology/seed.cypher
 ```
 
+**Graph structure:** `(life_stage)-[:TRIGGERS]->(Action)-[:IN_DOMAIN]->(domain)`. CLO uses both: life_stage triggers which actions apply; domain filters to the routed domain. Re-run seed after ontology changes.
+
 ### 4. MLflow (health model)
 
 ```bash
