@@ -1,12 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+type OntologyAction = { id: string; domain: string; description?: string };
+
+type NBAData = {
+  domain: string;
+  action: string;
+  confidence: number;
+  reasoning?: string;
+  displayMessage?: string;
+  ontologyDriven?: boolean;
+  ontologyActions?: OntologyAction[];
+  selectedFromOntology?: string;
+  neo4jBrowserUrl?: string;
+};
 
 export function CLOSection() {
   const [customerId, setCustomerId] = useState('');
-  const [nba, setNba] = useState<{ domain: string; action: string; confidence: number; reasoning?: string; displayMessage?: string; ontologyDriven?: boolean } | null>(null);
+  const [nba, setNba] = useState<NBAData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [neo4jConnected, setNeo4jConnected] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch('/api/ontology/status')
+      .then((r) => r.json())
+      .then((d) => setNeo4jConnected(d.connected))
+      .catch(() => setNeo4jConnected(false));
+  }, []);
 
   async function getNBA() {
     if (!customerId.trim()) return;
@@ -34,9 +56,23 @@ export function CLOSection() {
 
   return (
     <div className="p-4 rounded-lg border border-green-500/30 bg-green-500/5">
-      <h3 className="font-semibold text-green-400 mb-3">CLO — Next-Best-Action</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-green-400">CLO — Next-Best-Action</h3>
+        <span
+          className={`text-xs px-2 py-0.5 rounded ${
+            neo4jConnected === null
+              ? 'bg-slate-700 text-slate-400'
+              : neo4jConnected
+                ? 'bg-emerald-500/20 text-emerald-400'
+                : 'bg-amber-500/20 text-amber-400'
+          }`}
+        >
+          Neo4j: {neo4jConnected === null ? '…' : neo4jConnected ? 'connected' : 'disconnected'}
+        </span>
+      </div>
       <p className="text-slate-400 text-xs mb-3">
-        Try: sarah-chen (run <a href="/demo" className="text-cyan-400 hover:underline">Run Demo</a> first) or demo-acquisition, demo-activation, demo-expansion, demo-retention
+        Try: sarah-chen (run <a href="/demo" className="text-cyan-400 hover:underline">Run Demo</a> first) or
+        demo-acquisition, demo-activation, demo-expansion, demo-retention
       </p>
       <div className="flex gap-2 mb-3">
         <input
@@ -63,12 +99,40 @@ export function CLOSection() {
             </p>
           )}
           <div className="flex gap-4 text-slate-400">
-            <span>Domain: <strong className="text-slate-200">{nba.domain}</strong></span>
-            <span>Action: <strong className="text-slate-200">{nba.action}</strong></span>
-            <span>Confidence: <strong className="text-slate-200">{(nba.confidence * 100).toFixed(0)}%</strong></span>
+            <span>
+              Domain: <strong className="text-slate-200">{nba.domain}</strong>
+            </span>
+            <span>
+              Action: <strong className="text-slate-200">{nba.action}</strong>
+            </span>
+            <span>
+              Confidence: <strong className="text-slate-200">{(nba.confidence * 100).toFixed(0)}%</strong>
+            </span>
           </div>
           {nba.reasoning && <p className="text-slate-500 text-xs">{nba.reasoning}</p>}
-          {nba.ontologyDriven && <p className="text-emerald-500/80 text-xs">Driven by Neo4j ontology</p>}
+          {nba.ontologyDriven && nba.ontologyActions && nba.ontologyActions.length > 0 && (
+            <div className="mt-2 p-3 rounded bg-slate-800/50 border border-emerald-500/20">
+              <p className="text-emerald-400/90 text-xs font-medium mb-1">From Neo4j ontology</p>
+              <p className="text-slate-400 text-xs mb-1">
+                Actions: {nba.ontologyActions.map((a) => a.id).join(', ')}
+              </p>
+              {nba.selectedFromOntology && (
+                <p className="text-slate-300 text-xs">
+                  Selected: <strong className="text-emerald-400">{nba.selectedFromOntology}</strong>
+                </p>
+              )}
+              {nba.neo4jBrowserUrl && (
+                <a
+                  href={nba.neo4jBrowserUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-2 text-xs text-cyan-400 hover:underline"
+                >
+                  View in Neo4j Browser →
+                </a>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
